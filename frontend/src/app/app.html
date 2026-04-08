@@ -19,10 +19,10 @@
       <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div class="flex items-center space-x-2">
           <label for="difficulty" class="text-sm font-medium text-slate-500">DIFFICULTY</label>
-          <select id="difficulty" [ngModel]="difficulty()" (ngModelChange)="difficulty.set($event)" class="bg-slate-800 border-none rounded-lg px-3 py-1.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
-            <option value="easy">Beginner</option>
-            <option value="medium">Intermediate</option>
-            <option value="hard">Advanced</option>
+          <select id="difficulty" [ngModel]="difficulty()" (ngModelChange)="onDifficultyChange($event)" class="bg-slate-800 border-none rounded-lg px-3 py-1.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
           </select>
         </div>
         
@@ -63,13 +63,28 @@
 
       <!-- Feedback Area -->
       <div *ngIf="feedback()" class="mt-8 p-6 rounded-2xl border transition-all animate-in"
-           [ngClass]="feedback()?.isCorrect ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'">
-        <div class="flex items-center mb-4">
-          <span class="text-2xl mr-3">{{ feedback()?.isCorrect ? '✨' : '⚠️' }}</span>
-          <h3 class="font-black tracking-widest text-lg uppercase">{{ feedback()?.isCorrect ? 'Success' : 'Needs Work' }}</h3>
-          <span class="ml-auto bg-slate-900/50 px-3 py-1 rounded-lg text-sm font-bold border border-white/5">{{ feedback()?.score }}/100</span>
+           [ngClass]="(feedback()?.status === 'CORRECT' || feedback()?.status === 'MOSTLY_CORRECT') ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'">
+        
+        <div class="flex items-center mb-6">
+          <span class="text-2xl mr-3">{{ (feedback()?.status === 'CORRECT' || feedback()?.status === 'MOSTLY_CORRECT') ? '✨' : '⚠️' }}</span>
+          <h3 class="font-black tracking-widest text-lg uppercase">{{ feedback()?.status?.replace('_', ' ') }}</h3>
         </div>
-        <p class="text-sm leading-relaxed opacity-90">{{ feedback()?.feedback }}</p>
+
+        <div class="space-y-6">
+          <div>
+            <p class="text-sm font-bold uppercase tracking-widest opacity-40 mb-2 italic">Assessment</p>
+            <p class="text-sm leading-relaxed">{{ feedback()?.explanation }}</p>
+          </div>
+
+          <div *ngIf="feedback()?.lineFixes">
+            <p class="text-sm font-bold uppercase tracking-widest opacity-40 mb-2 italic">Suggested Fixes</p>
+            <p class="text-xs font-mono leading-relaxed bg-black/20 p-4 rounded-xl border border-white/5 whitespace-pre-wrap">{{ feedback()?.lineFixes }}</p>
+          </div>
+
+          <div class="pt-4 border-t border-white/5">
+            <p class="text-xs italic opacity-70">{{ feedback()?.encouragement }}</p>
+          </div>
+        </div>
       </div>
 
       <div *ngIf="!question() && !isLoading()" class="py-20 text-center opacity-40">
@@ -78,11 +93,6 @@
       </div>
 
     </div>
-
-    <!-- Footer Stats -->
-    <footer class="mt-8 text-slate-600 text-xs font-bold tracking-[0.2em] uppercase">
-      Matter.js Engine Active • Anime.js Linked • AI Core v4.0
-    </footer>
 
   </div>
 </main>

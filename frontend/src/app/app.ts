@@ -22,7 +22,12 @@ export class App implements OnDestroy {
   protected readonly userCode = signal('');
   protected readonly feedback = signal<EvaluationResult | null>(null);
   protected readonly isLoading = signal(false);
-  protected readonly difficulty = signal('medium');
+  protected readonly difficulty = signal<string>(localStorage.getItem('difficulty') || 'medium');
+
+  protected onDifficultyChange(newVal: string) {
+    this.difficulty.set(newVal);
+    localStorage.setItem('difficulty', newVal);
+  }
 
   private container = viewChild<ElementRef<HTMLDivElement>>('scene');
   private card = viewChild<ElementRef<HTMLDivElement>>('card');
@@ -85,7 +90,9 @@ export class App implements OnDestroy {
       next: (res) => {
         this.feedback.set(res);
         this.isLoading.set(false);
-        if (res.isCorrect) {
+        const isSuccessful = res.status === 'CORRECT' || res.status === 'MOSTLY_CORRECT';
+        
+        if (isSuccessful) {
           this.celebrate();
           this.explodePhysicsObjects();
         } else {

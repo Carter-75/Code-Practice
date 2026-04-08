@@ -1,26 +1,24 @@
 const { OpenAI } = require('openai');
-require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: (process.env.OPENAI_API_KEY || '').trim(),
 });
 
 /**
  * Sends a prompt to OpenAI and returns the response content.
- * @param {string} prompt 
- * @returns {Promise<string>}
  */
 async function getChatCompletion(prompt) {
   try {
     const response = await openai.chat.completions.create({
-      model: "gpt-4o", // Using gpt-4o for high quality reasoning
+      model: "gpt-4o",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.7,
     });
     return response.choices[0].message.content;
   } catch (error) {
     console.error('OpenAI API Error:', error);
-    throw new Error('Failed to communicate with AI service.');
+    throw new Error(`AI Service Error: ${error.message}`);
   }
 }
 

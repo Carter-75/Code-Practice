@@ -3,9 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 export interface EvaluationResult {
-  score: number;
-  feedback: string;
-  isCorrect: boolean;
+  status: 'CORRECT' | 'MOSTLY_CORRECT' | 'PARTIAL' | 'INCORRECT';
+  explanation: string;
+  lineFixes: string;
+  correctSolution: string;
+  encouragement: string;
 }
 
 export interface QuestionResult {
