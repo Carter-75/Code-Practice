@@ -1,0 +1,88 @@
+<main class="relative min-h-screen bg-slate-950 text-slate-100 overflow-hidden font-sans selection:bg-indigo-500/30">
+  
+  <!-- Matter.js Canvas Background -->
+  <div #scene id="physics-container" class="absolute inset-0 z-0 opacity-40 pointer-events-none"></div>
+
+  <!-- Content Layer -->
+  <div class="relative z-10 flex flex-col items-center justify-center p-6 sm:p-12 min-h-screen">
+    
+    <header class="mb-8 text-center" #header>
+      <h1 class="text-4xl sm:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 drop-shadow-sm tracking-tight">
+        {{ title() }}
+      </h1>
+      <p class="mt-4 text-slate-400 max-w-md mx-auto">Master your craft through AI-tailored challenges and real-time physics-driven feedback.</p>
+    </header>
+
+    <div #card class="w-full max-w-4xl bg-slate-900/60 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl p-6 sm:p-10 overflow-hidden">
+      
+      <!-- Controls -->
+      <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <div class="flex items-center space-x-2">
+          <label for="difficulty" class="text-sm font-medium text-slate-500">DIFFICULTY</label>
+          <select id="difficulty" [ngModel]="difficulty()" (ngModelChange)="difficulty.set($event)" class="bg-slate-800 border-none rounded-lg px-3 py-1.5 text-sm font-semibold focus:ring-2 focus:ring-indigo-500 transition-all outline-none">
+            <option value="easy">Beginner</option>
+            <option value="medium">Intermediate</option>
+            <option value="hard">Advanced</option>
+          </select>
+        </div>
+        
+        <button (click)="generateQuestion()" [disabled]="isLoading()" 
+          class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl font-bold transition-all transform hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/20 flex items-center">
+          <span *ngIf="isLoading()" class="mr-2 animate-spin">◌</span>
+          {{ question() ? 'New Question' : 'Start Training' }}
+        </button>
+      </div>
+
+      <!-- Question Area -->
+      <div *ngIf="question()" class="question-area mb-8 animate-in">
+        <h2 class="text-xl font-bold bg-slate-800/50 inline-block px-4 py-1 rounded-full mb-4 border border-slate-700/50">
+          {{ question()?.title }}
+        </h2>
+        <div class="prose prose-invert max-w-none text-slate-300 leading-relaxed bg-slate-950/30 p-4 rounded-2xl border border-slate-800/50">
+          {{ question()?.problem }}
+        </div>
+      </div>
+
+      <!-- Editor Area -->
+      <div *ngIf="question()" class="space-y-4 animate-in">
+        <div class="relative group">
+          <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur opacity-20 group-focus-within:opacity-40 transition duration-1000"></div>
+          <textarea 
+            [ngModel]="userCode()" 
+            (ngModelChange)="userCode.set($event)"
+            placeholder="Write your solution here..." 
+            class="relative w-full h-64 bg-slate-950/80 rounded-2xl p-6 font-mono text-sm border border-slate-800 outline-none focus:border-indigo-500/50 transition-all resize-none shadow-inner text-indigo-100/90"
+          ></textarea>
+        </div>
+
+        <button (click)="checkSolution()" [disabled]="isLoading() || !userCode()" 
+          class="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 focus:ring-4 focus:ring-indigo-500/20 disabled:opacity-50 rounded-2xl font-black text-lg tracking-wider transition-all transform active:scale-[0.98] shadow-xl shadow-purple-500/10">
+          SUBMIT SOLUTION
+        </button>
+      </div>
+
+      <!-- Feedback Area -->
+      <div *ngIf="feedback()" class="mt-8 p-6 rounded-2xl border transition-all animate-in"
+           [ngClass]="feedback()?.isCorrect ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'">
+        <div class="flex items-center mb-4">
+          <span class="text-2xl mr-3">{{ feedback()?.isCorrect ? '✨' : '⚠️' }}</span>
+          <h3 class="font-black tracking-widest text-lg uppercase">{{ feedback()?.isCorrect ? 'Success' : 'Needs Work' }}</h3>
+          <span class="ml-auto bg-slate-900/50 px-3 py-1 rounded-lg text-sm font-bold border border-white/5">{{ feedback()?.score }}/100</span>
+        </div>
+        <p class="text-sm leading-relaxed opacity-90">{{ feedback()?.feedback }}</p>
+      </div>
+
+      <div *ngIf="!question() && !isLoading()" class="py-20 text-center opacity-40">
+        <div class="text-6xl mb-6">🤖</div>
+        <p class="text-xl font-medium tracking-tight">Select difficulty and start your session</p>
+      </div>
+
+    </div>
+
+    <!-- Footer Stats -->
+    <footer class="mt-8 text-slate-600 text-xs font-bold tracking-[0.2em] uppercase">
+      Matter.js Engine Active • Anime.js Linked • AI Core v4.0
+    </footer>
+
+  </div>
+</main>
