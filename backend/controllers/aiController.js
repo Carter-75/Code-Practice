@@ -234,6 +234,7 @@ exports.evaluateSolution = async (req, res) => {
       }
     }
 
+    try {
       const savePath = PATHS.extracted;
       let currentData = { extracted_lessons: [] };
       try {
