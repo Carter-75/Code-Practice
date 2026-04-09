@@ -754,17 +754,14 @@ export class App implements OnInit {{
         # 2. Backend Standalone Configuration
         be_vercel_json = {
             "version": 2,
-            "builds": [
-                {
-                    "src": "app.js",
-                    "use": "@vercel/node",
-                    "config": {
-                        "includeFiles": ["prompts/**", "routes/**", "models/**", "services/**", "controllers/**"]
-                    }
+            "functions": {
+                "app.js": {
+                    "runtime": "@vercel/node",
+                    "includeFiles": "prompts/**"
                 }
-            ],
-            "routes": [
-                { "src": "/api/(.*)", "dest": "app.js" }
+            },
+            "rewrites": [
+                { "source": "/(.*)", "destination": "app.js" }
             ],
             "headers": [
                 {

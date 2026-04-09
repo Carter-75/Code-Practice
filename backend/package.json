@@ -1,6 +1,7 @@
 {
   "name": "Code-Pract-backend",
   "version": "1.0.0",
+  "main": "app.js",
   "scripts": {
     "start": "node ./bin/www",
     "dev": "nodemon ./bin/www"
