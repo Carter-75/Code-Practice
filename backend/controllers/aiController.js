@@ -33,7 +33,20 @@ async function getPrompt(filename) {
   return await fs.readFile(filePath, 'utf-8');
 }
 
+// Utility to check for API key
+const checkApiKey = (res) => {
+  if (!process.env.OPENAI_API_KEY) {
+    console.error('ERROR: OPENAI_API_KEY is missing from the Environment Vault!');
+    res.status(500).json({ 
+      error: 'Vault Error: OpenAI API Key is missing from Vercel Environment Variables.' 
+    });
+    return false;
+  }
+  return true;
+};
+
 exports.generateNewQuestion = async (req, res) => {
+  if (!checkApiKey(res)) return;
   const difficulty = req.query.difficulty || 'medium';
   const selectedLangs = req.query.languages ? req.query.languages.split(',') : ['javascript', 'python', 'java'];
 

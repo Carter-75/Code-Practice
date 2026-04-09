@@ -4,3 +4,5 @@ dist/
 .angular/
 .vscode/
 scratch/
+.vercel
+.env*.local
