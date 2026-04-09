@@ -273,7 +273,7 @@ module.exports = router;
         "scripts": {
             "ng": "ng",
             "start": "ng serve",
-            "build": "ng build",
+            "build": "ng build && node -e \\\"const fs = require('fs'); const src = 'dist/frontend/browser'; const dest = 'dist/frontend'; if (fs.existsSync(src)) { fs.cpSync(src, dest, {recursive: true}); fs.rmSync(src, {recursive: true}); }\\\"",
             "watch": "ng build --watch --configuration development",
             "test": "vitest"
         },
