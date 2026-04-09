@@ -999,12 +999,16 @@ def sync_vercel_env():
                 val = val.strip()
                 
                 if key and val:
-                    subprocess.run(
-                        ["vercel", "env", "add", key, val, "production", "--non-interactive", "--yes"],
+                    result = subprocess.run(
+                        ["npx", "vercel", "env", "add", key, "production", "--value", val, "--yes"],
                         shell=True,
-                        capture_output=True
+                        capture_output=True,
+                        text=True
                     )
-                    print(f"   Synced: {key}")
+                    if result.returncode != 0:
+                        print(f"   [!] Failed to sync {key}: {result.stderr.strip()}")
+                    else:
+                        print(f"   Synced: {key}")
 
         print("Vercel Vault is now up to date.")
 
