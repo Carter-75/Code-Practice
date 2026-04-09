@@ -27,28 +27,58 @@ exports.generateNewQuestion = async (req, res) => {
     const context = await getContext();
     const systemInstruction = await getPrompt('questionPrompt.txt');
     
-    // Filter curriculum based on user selection and strict difficulty
-    const filteredCurriculum = {};
+    // Build a flat list of all allowed topics across selected languages
+    let pool = [];
     selectedLangs.forEach(lang => {
       if (context.curriculum[lang]) {
-        // Deep copy only topics that match the selected difficulty level
         const domain = context.curriculum[lang];
-        const filteredTopics = domain.topics.filter(t => t.difficulty.toLowerCase() === difficulty.toLowerCase());
-        
-        if (filteredTopics.length > 0) {
-          filteredCurriculum[lang] = {
-            metadata: domain.metadata,
-            topics: filteredTopics
-          };
-        }
+        const filtered = domain.topics.filter(t => t.difficulty.toLowerCase() === difficulty.toLowerCase());
+        filtered.forEach(topic => {
+          pool.push({ ...topic, domain: lang });
+        });
       }
     });
+    
+    if (pool.length === 0) {
+      throw new Error(`No ${difficulty} topics found for selected categories: ${selectedLangs.join(', ')}`);
+    }
+
+    // Pick one random topic as the specific context for this generation
+    const selectedTopic = pool[Math.floor(Math.random() * pool.length)];
+
+    // Strict Modality Enforcement: Drawing is reserved for specific visual logic domains
+    let modalityGuidance = "AVAILABLE MODALITIES: 'code', 'mcq', 'text'.";
+    
+    if (selectedTopic.domain.toLowerCase() === 'automata') {
+        modalityGuidance = "AVAILABLE MODALITIES: 'drawing', 'code', 'mcq', 'text'. Drawing is allowed for state machines.";
+    } else if (selectedTopic.domain.toLowerCase() === 'c_systems' && selectedTopic.title.toLowerCase().includes('memory')) {
+        modalityGuidance = "AVAILABLE MODALITIES: 'drawing', 'code', 'mcq', 'text'. Drawing is allowed for stack/heap diagrams.";
+    }
+    
+    // Final reminder on visual aids
+    const visualAidInstruction = "REMINDER: DO NOT provide a dallePrompt unless you are providing a mandatory reference diagram for analysis. If the user can answer without seeing a picture, omit the dallePrompt.";
 
     const fullPrompt = `
       ${systemInstruction}
-      SELECTED DIFFICULTY LEVEL: ${difficulty.toUpperCase()}
-      ALLOWED TOPICS/LANGUAGES: ${JSON.stringify(filteredCurriculum)}
-      GLOBAL AI RULES: ${JSON.stringify(context.ai_rules)}
+      
+      ### THE CHALLENGE DATA
+      DOMAIN: ${selectedTopic.domain.toUpperCase()}
+      TOPIC: ${selectedTopic.title}
+      DIFFICULTY: ${selectedTopic.difficulty}
+      PROBLEM_KEY: ${selectedTopic.problem}
+      EXPERT_SOLUTION: ${selectedTopic.snippet}
+      TECHNICAL_RATIONALE: ${selectedTopic.rationale}
+      
+      ### TARGET MODALITY
+      ${modalityGuidance}
+      
+      ### VISUAL AID POLICY
+      ${visualAidInstruction}
+      
+      ### INSTRUCTION
+      Your task is to transform the provided CHALLENGE DATA into a high-fidelity training challenge.
+      DO NOT copy the PROBLEM_KEY verbatim; rephrase it into a professional academic task.
+      ALWAYS include the TECHNICAL_RATIONALE in your explanation.
     `;
 
     const aiResponse = await openaiService.getChatCompletion(fullPrompt);
@@ -57,10 +87,10 @@ exports.generateNewQuestion = async (req, res) => {
 
     const result = JSON.parse(cleanJson);
 
-    // DALL-E Integration: Only if necessary (explicit prompt from AI or drawing type)
-    if (result.dallePrompt || result.type === 'drawing') {
+    // DALL-E Integration: Only if necessary (explicit prompt from AI)
+    if (result.dallePrompt) {
       try {
-        const promptForIm = result.dallePrompt || `A simple, hand-drawn whiteboard diagram illustrating ${result.title} for ${result.language} curriculum. Use black marker on a white background, rough technical sketch style, simple circles and arrows. NO 3D, NO isometric art.`;
+        const promptForIm = result.dallePrompt || `A simple, hand-drawn whiteboard diagram illustrating ${result.title} curriculum.`;
         const imageUrl = await openaiService.generateImage(promptForIm);
         result.imageUrl = imageUrl;
       } catch (imgError) {

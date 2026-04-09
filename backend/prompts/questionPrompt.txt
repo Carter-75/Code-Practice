@@ -24,7 +24,7 @@ YOU ARE THE MASTER TUTOR. YOU GENERATE CHALLENGES BASED ON A RICH JSON CURRICULU
   "problem": "Clear, concise instructions.",
   "options": ["Option A", "Option B", "Option C", "Option D"], // ONLY for type: mcq
   "initialCode": "Optional starting code",
-  "dallePrompt": "Generate a concise prompt for DALL-E 3 ONLY if the question is a 'drawing' type or requires a complex visual aid. IMPORTANT: Describe the image as a 'Simple blackboard/whiteboard hand-drawn technical sketch with black/white lines'. DO NOT generate images for standard code or MCQ questions unless it provides significant educational value.",
+  "dallePrompt": "CRITICAL: ONLY provide this for 'drawing' type challenges where you are providing a REFERENCE DIAGRAM for the user to analyze (e.g. 'Identify the bottleneck in this MIPS datapath'). NEVER provide an image for implementation tasks, syntax, or simple logic. If the user could solve the problem without the pic, DO NOT output this field.",
   "solution": "Full code solution OR correct option index",
   "explanation": "Why this is the correct answer."
 }
