@@ -2,7 +2,7 @@ import { Component, signal, effect, ElementRef, viewChild, inject, AfterViewInit
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { AiService, QuestionResult, EvaluationResult } from './services/ai.service';
+import { ApiService, QuestionResult, EvaluationResult } from './services/api.service';
 import anime from 'animejs';
 import Matter from 'matter-js';
 import confetti from 'canvas-confetti';
@@ -14,7 +14,7 @@ import confetti from 'canvas-confetti';
   templateUrl: './app.html',
 })
 export class App implements AfterViewInit {
-  private aiService = inject(AiService);
+  private apiService = inject(ApiService);
 
   // Core State Signals
   title = signal('AI PRACTICE TRAINER V2');
@@ -72,7 +72,7 @@ export class App implements AfterViewInit {
   }
 
   loadAvailableLanguages() {
-    this.aiService.getAvailableLanguages().subscribe(langs => {
+    this.apiService.getData<string[]>('ai/languages').subscribe(langs => {
       this.allLanguages.set(langs);
     });
   }
@@ -106,7 +106,10 @@ export class App implements AfterViewInit {
     this.showReferenceImage.set(false);
     this.clearCanvas();
 
-    this.aiService.getQuestion(this.difficulty(), this.selectedLanguages()).subscribe({
+    const langParam = this.selectedLanguages().length > 0 ? `&languages=${this.selectedLanguages().join(',')}` : '';
+    const endpoint = `ai/question?difficulty=${this.difficulty()}${langParam}`;
+
+    this.apiService.getData<QuestionResult>(endpoint).subscribe({
       next: (res) => {
         this.question.set(res);
         this.isLoading.set(false);
@@ -160,7 +163,7 @@ export class App implements AfterViewInit {
     }
 
     this.isLoading.set(true);
-    this.aiService.evaluateSolution(this.question()!.problem, submission, this.question()!.type).subscribe({
+    this.apiService.postData<EvaluationResult>('ai/check', { question: this.question()!.problem, userCode: submission, type: this.question()!.type }).subscribe({
       next: (res) => {
         this.feedback.set(res);
         this.isLoading.set(false);
@@ -177,7 +180,7 @@ export class App implements AfterViewInit {
     if (!this.userFeedbackText()) return;
     
     this.isLoading.set(true);
-    this.aiService.submitFeedback(this.userFeedbackText()).subscribe({
+    this.apiService.postData<any>('ai/feedback', { feedback: this.userFeedbackText() }).subscribe({
       next: (res) => {
         this.userFeedbackText.set('');
         this.showFeedbackInput.set(false);

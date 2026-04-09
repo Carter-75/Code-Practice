@@ -280,12 +280,12 @@ module.exports = router;
         fe_dev_deps.update({"@types/canvas-confetti": "^1.6.4"})
 
     fe_package_json = {
-        "name": f"{project_name}-frontend",
+        "name": f"{project_name.lower()}-frontend",
         "version": "0.0.0",
         "scripts": {
             "ng": "ng",
             "start": "ng serve",
-            "build": "ng build && node -e \\\"const fs = require('fs'); const src = 'dist/frontend/browser'; const dest = 'dist/frontend'; if (fs.existsSync(src)) { fs.cpSync(src, dest, {recursive: true}); fs.rmSync(src, {recursive: true}); }\\\"",
+            "build": f"node -e \\\"const fs = require('fs'); const file = 'src/app/services/api.service.ts'; let c = fs.readFileSync(file, 'utf8'); c = c.replace('__PRODUCTION__', process.env.PRODUCTION || 'false').replace('__PROD_BACKEND_URL__', process.env.PROD_BACKEND_URL || '').replace('__PROD_FRONTEND_URL__', process.env.PROD_FRONTEND_URL || ''); fs.writeFileSync(file, c);\\\" && ng build && node -e \\\"const fs = require('fs'); const src = 'dist/frontend/browser'; const dest = 'dist/frontend'; if (fs.existsSync(src)) {{ fs.cpSync(src, dest, {{recursive: true}}); fs.rmSync(src, {{recursive: true}}); }}\\\"",
             "watch": "ng build --watch --configuration development",
             "test": "vitest"
         },
@@ -430,15 +430,15 @@ export class ApiService {{
   /**
    * Universal GET wrapper
    */
-  getData(endpoint: string): Observable<any> {{
-    return this.http.get(`${{this.apiUrl}}/${{endpoint}}`);
+  getData<T>(endpoint: string): Observable<T> {{
+    return this.http.get<T>(`${{this.apiUrl}}/${{endpoint}}`);
   }}
 
   /**
    * Universal POST wrapper
    */
-  postData(endpoint: string, body: any): Observable<any> {{
-    return this.http.post(`${{this.apiUrl}}/${{endpoint}}`, body);
+  postData<T>(endpoint: string, body: any): Observable<T> {{
+    return this.http.post<T>(`${{this.apiUrl}}/${{endpoint}}`, body);
   }}
 }}
 """
@@ -540,11 +540,11 @@ npm start
 """
 
     # Component imports and logic
-    imports_list = ["Component", "signal"]
+    imports_list = ["Component", "signal", "inject", "OnInit"]
     if use_matter or use_anime or use_confetti:
         imports_list.extend(["viewChild", "ElementRef", "afterNextRender", "OnDestroy"])
     
-    physics_imports = f"import {{ {', '.join(imports_list)} }} from '@angular/core';\n"
+    physics_imports = f"import {{ {', '.join(imports_list)} }} from '@angular/core';\nimport {{ ApiService }} from './services/api.service';\n"
     if use_matter: physics_imports += "import * as Matter from 'matter-js';\n"
     if use_anime: physics_imports += "import anime from 'animejs';\n"
     if use_confetti: physics_imports += "import confetti from 'canvas-confetti';\n"
@@ -656,8 +656,15 @@ import {{ RouterOutlet }} from '@angular/router';
   templateUrl: './app.html',
   styleUrl: './app.{style_ext}'
 }})
-export class App {{
+export class App implements OnInit {{
+  private api = inject(ApiService);
   protected readonly title = signal('{project_name}');
+  
+  ngOnInit() {{
+    // Example universal call
+    this.api.getData('ping').subscribe(res => console.log('API Status:', res));
+  }}
+
   {physics_logic}
 }}
 """
