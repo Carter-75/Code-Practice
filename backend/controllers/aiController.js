@@ -290,6 +290,12 @@ exports.getAvailableLanguages = async (req, res) => {
   try {
     const context = await getContext();
     const sortedLangs = Object.keys(context.curriculum).sort();
+    
+    // Force 200 response by disabling cache
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     res.json(sortedLangs);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch languages' });

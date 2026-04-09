@@ -234,6 +234,22 @@
         "correctSolution": "```javascript\nconst express = require('express');\nconst app = express();\n\napp.post('/logout', (req, res) => {\n  req.session.destroy(err => {\n    if (err) {\n      return res.status(500).send('Unable to log out');\n    } else {\n      res.clearCookie('connect.sid');\n      return res.send('Logout successful');\n    }\n  });\n});\n\nmodule.exports = app;\n```",
         "encouragement": "Don't worry, you can always try again! Review the requirements and give it another shot."
       }
+    },
+    {
+      "timestamp": "2026-04-09T02:09:15.015Z",
+      "type": "resolved_session",
+      "question": "Create a function that will append a new list item to a specified unordered list (UL) element. The list item (LI) should display the student's full name and include the student's unique ID as a data attribute. This will facilitate future interactions with the list item.",
+      "user_submission": ".\n",
+      "modality": "code",
+      "feedback": {
+        "status": "INCORRECT",
+        "explanation": "The student did not submit any code, hence there is nothing to evaluate.",
+        "issues": [
+          "No code was provided for evaluation."
+        ],
+        "correctSolution": "function appendStudentToList(ulElementId, fullName, studentId) {\n  const ulElement = document.getElementById(ulElementId);\n  const listItem = document.createElement('li');\n  listItem.textContent = fullName;\n  listItem.setAttribute('data-student-id', studentId);\n  ulElement.appendChild(listItem);\n}",
+        "encouragement": "Don't worry! Start by writing a function to append items to a list, and you'll get it soon."
+      }
     }
   ]
 }

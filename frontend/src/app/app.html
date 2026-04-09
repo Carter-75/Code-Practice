@@ -15,6 +15,22 @@
 
     <div #card class="w-full max-w-5xl bg-slate-900/60 backdrop-blur-3xl border border-slate-800/50 rounded-[2.5rem] shadow-2xl p-6 sm:p-12 overflow-hidden relative">
       
+      <!-- Loading Overlay -->
+      <div *ngIf="isLoading()" class="absolute inset-0 z-[100] bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-12 transition-all">
+        <div class="flex flex-col items-center text-center">
+          <div class="relative w-24 h-24 mb-8">
+            <div class="absolute inset-0 rounded-full border-2 border-indigo-500/10 scale-150 animate-pulse"></div>
+            <div class="absolute inset-0 rounded-full border-t-2 border-indigo-500 animate-spin"></div>
+            <div class="absolute inset-4 rounded-full bg-gradient-to-br from-indigo-500/40 via-purple-500/40 to-pink-500/40 blur-xl animate-pulse"></div>
+            <div class="absolute inset-8 rounded-full bg-indigo-500 shadow-[0_0_30px_rgba(99,102,241,0.6)] flex items-center justify-center">
+               <span class="text-white text-xs animate-pulse">⚡</span>
+            </div>
+          </div>
+          <h3 class="text-xs font-black tracking-[0.5em] text-white uppercase mb-2">Neural Synthesis</h3>
+          <p class="text-[9px] font-bold text-slate-500 tracking-widest uppercase">Adapting to expert patterns...</p>
+        </div>
+      </div>
+      
       <!-- Controls Top Bar -->
       <div class="flex flex-wrap items-center justify-between gap-6 mb-10 pb-8 border-b border-slate-800/50">
         <div class="flex flex-wrap items-center gap-6">

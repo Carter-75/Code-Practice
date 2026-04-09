@@ -242,6 +242,65 @@
         }
       ]
     },
+    "mongo_db": {
+      "metadata": { "name": "MongoDB Shell", "color": "#47A248" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Atomic Document Insertion",
+          "problem": "Use the MongoDB shell to insert a single document into the 'inventory' collection representing a 'canvas' item with a quantity of 100.",
+          "snippet": "db.inventory.insertOne({ item: \"canvas\", qty: 100 });",
+          "rationale": "Expert MongoDB logic utilizes `insertOne` for precision and to return the unique `insertedId` immediately, avoiding the ambiguity of bulk operations."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Equality Filter Queries",
+          "problem": "Retrieve all documents from the 'users' collection where the 'status' field is exactly set to 'D' (Deactivated).",
+          "snippet": "db.users.find({ status: \"D\" });",
+          "rationale": "Literal object matching in `.find()` is the expert starting point for all database filtering, leveraging indices if available on the filtered field."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Collection Cardinality",
+          "problem": "Implement a shell command to count the total number of documents in the 'orders' collection that have a 'shipped' status.",
+          "snippet": "db.orders.countDocuments({ status: \"shipped\" });",
+          "rationale": "`countDocuments` is the expert preferred method over `count()` as it provides an accurate count even in sharded and replicated environments."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Selective Field Projection",
+          "problem": "Query the 'products' collection to return all items, but only include the 'name' and 'price' fields, explicitly excluding the '_id'.",
+          "snippet": "db.products.find({}, { name: 1, price: 1, _id: 0 });",
+          "rationale": "Expert projection excludes `_id` and limits fields to minimize network payload and ensure the frontend only receives necessary data."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "In-Place Value Increment",
+          "problem": "Update a specific document in 'analytics' by incrementing the 'pageViews' counter by 1 based on its unique ID.",
+          "snippet": "db.analytics.updateOne({ _id: 123 }, { $inc: { pageViews: 1 } });",
+          "rationale": "Using `$inc` is an expert atomic operation that avoids 'read-modify-write' race conditions, essential for high-concurrency tracking."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Logical OR Conjunction",
+          "problem": "Construct a query to find students who are either in the 'CS' major OR have a GPA higher than 3.8.",
+          "snippet": "db.students.find({ $or: [ { major: \"CS\" }, { gpa: { $gt: 3.8 } } ] });",
+          "rationale": "The `$or` operator allows for expert multi-criteria filtering across different fields, facilitating complex user-search functionality."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Relational Lookup Joins",
+          "problem": "Design an aggregation pipeline that performs a left-outer join between 'orders' and 'products' using the 'productId' field.",
+          "snippet": "db.orders.aggregate([{ $lookup: { from: \"products\", localField: \"productId\", foreignField: \"_id\", as: \"details\" } }]);",
+          "rationale": "Aggregation `$lookup` is the expert way to simulate relational joins in a document store, essential for denormalized reporting."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Time-To-Live (TTL) Indices",
+          "problem": "Create an index on the 'sessions' collection's 'createdAt' field that automatically deletes documents after 3600 seconds.",
+          "snippet": "db.sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 3600 });",
+          "rationale": "TTL indices are an expert performance pattern for managing temporary data like session tokens or transient logs automatically at the DB level."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Array Data Flattening",
+          "problem": "Implement a pipeline that flattens an array of 'tags' from a post document and then groups by tag name to count usage.",
+          "snippet": "db.posts.aggregate([{ $unwind: \"$tags\" }, { $group: { _id: \"$tags\", count: { $sum: 1 } } }]);",
+          "rationale": "Combining `$unwind` and `$group` is an expert analytical pattern for deriving insights from nested array data structures."
+        }
+      ]
+    },
     "c_systems": {
       "metadata": { "name": "C Programming", "color": "#A8B9CC" },
       "topics": [
