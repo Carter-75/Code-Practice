@@ -768,11 +768,13 @@ This project follows a decoupled MEAN stack architecture.
 - **Security**: Iframe headers are set to allow embedding in `carter-portfolio.fyi`.
 - **CSS**: Using {css_choice}.
 - **Features**: {", ".join([f for f, v in [("Physics (Matter)", use_matter), ("Animations (Anime)", use_anime), ("Confetti", use_confetti)] if v]) or "Standard"}.
+- **Vercel Watcher**: Persistent sync enabled via `pre-push` git hook.
 
 ## Agent Rules
 - Always maintain the iframe security headers in `backend/app.js`.
 - Prefer Signals for Angular state.
 - Use standalone components.
+- **Environment**: If you modify the root `.env`, remind the user to `git push` to sync with Vercel.
 
 {ai_rules_common}
 """, encoding='utf-8')
@@ -798,15 +800,107 @@ Decoupled MEAN Stack (Angular {fe_port} / Express {be_port}).
     if fe_hosting == "vercel" or be_hosting == "vercel":
         print("\n--- Preparing Vercel Environment ---")
         try:
+            # 1. Update CLI
             subprocess.run(["npm", "install", "-g", "vercel@latest"], shell=True, check=True)
-            print("Vercel CLI updated successfully.")
-        except subprocess.CalledProcessError:
-            print("Warning: Could not update Vercel CLI. Please update manually with 'npm i -g vercel@latest'.")
+            print("Vercel CLI updated.")
+
+            # 2. Link Project
+            print("Linking to Vercel...")
+            subprocess.run(["vercel", "link", "--yes"], shell=True, check=True)
+            
+            # 3. Sync .env to Vault
+            if (project_root / ".env").exists():
+                print("Syncing .env to Vercel Vault...")
+                with open(project_root / ".env", "r") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            key, val = line.split("=", 1)
+                            if key and val:
+                                subprocess.run([
+                                    "vercel", "env", "add", 
+                                    key.strip(), val.strip(), "production", 
+                                    "--non-interactive", "--yes"
+                                ], shell=True)
+                print("Vercel Vault synced successfully.")
+
+        except subprocess.CalledProcessError as e:
+            print(f"Warning: Vercel preparation encountered an issue: {e}")
     try:
         subprocess.run(["git", "init"], cwd=project_root, check=True, capture_output=True)
         print("Initialized Git repository.")
+        
+        # --- Vercel Watcher (Git Hook) ---
+        sync_env_py = """import os
+import subprocess
+from pathlib import Path
+
+def sync_vercel_env():
+    \"\"\"Reads the root .env and syncs each variable to the Vercel Production vault.\"\"\"
+    env_path = Path('.env')
+    
+    if not env_path.exists():
+        print(\"?? No .env file found in the root. Skipping sync.\")
+        return
+
+    print(\"🚀 Vercel Watcher: Syncing local .env to Production Vault...\")
+    
+    try:
+        # Check if project is linked
+        check_linked = subprocess.run(
+            [\"vercel\", \"link\", \"--yes\"], 
+            capture_output=True, 
+            text=True, 
+            shell=True
+        )
+        
+        if check_linked.returncode != 0:
+            print(\"?? Warning: Project not correctly linked to Vercel. Skipping sync.\")
+            return
+
+        with open(env_path, \"r\", encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith(\"#\") or \"=\" not in line:
+                    continue
+                
+                key, val = line.split(\"=\", 1)
+                key = key.strip()
+                val = val.strip()
+                
+                if key and val:
+                    subprocess.run(
+                        [\"vercel\", \"env\", \"add\", key, val, \"production\", \"--non-interactive\", \"--yes\"],
+                        shell=True,
+                        capture_output=True
+                    )
+                    print(f\"   ? Synced: {key}\")
+
+        print(\"? Vercel Vault is now up to date.\")
+
     except Exception as e:
-        print(f"Warning: Could not initialize Git: {e}")
+        print(f\"?? Error during Vercel sync: {e}\")
+
+if __name__ == \"__main__\":
+    sync_vercel_env()
+"""
+        (project_root / "sync-env.py").write_text(sync_env_py, encoding='utf-8')
+
+        pre_push_hook = """#!/bin/sh
+# Vercel Watcher Hook
+# Syncs local .env to Vercel Vault before every push.
+
+echo \"🚀 Vercel Watcher: Checking environment status...\"
+python sync-env.py
+
+# Always allow the push to continue
+exit 0
+"""
+        hook_path = project_root / ".git" / "hooks" / "pre-push"
+        hook_path.write_text(pre_push_hook, encoding='utf-8')
+
+    except Exception as e:
+        print(f"Warning: Git/Hook initialization issue: {e}")
 
     # --- NPM Install ---
     print("\nInstalling dependencies (this may take a few minutes)...")
