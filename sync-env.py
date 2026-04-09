@@ -13,18 +13,8 @@ def sync_vercel_env():
     print("🚀 Vercel Watcher: Syncing local .env to Production Vault...")
     
     try:
-        # Check if project is linked
-        check_linked = subprocess.run(
-            ["vercel", "link", "--yes"], 
-            capture_output=True, 
-            text=True, 
-            shell=True
-        )
-        
-        if check_linked.returncode != 0:
-            print("?? Warning: Project not correctly linked to Vercel. Skipping sync.")
-            return
-
+        # We assume the project is linked since you ran 'vercel link' manually
+        # If it's not, the vercel env add command will give a helpful error anyway
         with open(env_path, "r", encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
