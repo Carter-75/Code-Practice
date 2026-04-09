@@ -740,18 +740,31 @@ export class App implements OnInit {{
     (backend_root / "models").mkdir()
     
     if fe_hosting == "vercel" or be_hosting == "vercel":
-        root_vercel_json = {
-            "version": 2,
+        # 1. Frontend Proxy Bridge
+        fe_vercel_json = {
             "cleanUrls": True,
             "trailingSlash": False,
-            "functions": {
-                "backend/app.js": {
-                    "runtime": "@vercel/node"
-                }
-            },
             "rewrites": [
-                { "source": "/api/:path*", "destination": "/backend/app.js" },
-                { "source": "/(.*)", "destination": "/frontend/index.html" }
+                { "source": "/api/:path*", "destination": f"https://{project_name}-backend.vercel.app/api/:path*" },
+                { "source": "/(.*)", "destination": "/index.html" }
+            ]
+        }
+        (frontend_root / "vercel.json").write_text(json.dumps(fe_vercel_json, indent=2), encoding='utf-8')
+
+        # 2. Backend Standalone Configuration
+        be_vercel_json = {
+            "version": 2,
+            "builds": [
+                {
+                    "src": "app.js",
+                    "use": "@vercel/node",
+                    "config": {
+                        "includeFiles": ["prompts/**", "routes/**", "models/**", "services/**", "controllers/**"]
+                    }
+                }
+            ],
+            "routes": [
+                { "src": "/api/(.*)", "dest": "app.js" }
             ],
             "headers": [
                 {
@@ -766,7 +779,7 @@ export class App implements OnInit {{
                 }
             ]
         }
-        (project_root / "vercel.json").write_text(json.dumps(root_vercel_json, indent=2), encoding='utf-8')
+        (backend_root / "vercel.json").write_text(json.dumps(be_vercel_json, indent=2), encoding='utf-8')
 
     # --- Write Frontend ---
     (frontend_root / "package.json").write_text(json.dumps(fe_package_json, indent=2), encoding='utf-8')
