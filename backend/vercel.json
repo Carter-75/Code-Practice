@@ -2,7 +2,13 @@
   "version": 2,
   "functions": {
     "app.js": {
-      "includeFiles": "prompts/**"
+      "includeFiles": [
+        "prompts/**",
+        "services/**",
+        "models/**",
+        "controllers/**",
+        "routes/**"
+      ]
     }
   },
   "rewrites": [
