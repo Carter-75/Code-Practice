@@ -22,7 +22,7 @@ ALWAYS check the `CURATED RULES` in the context for any "Leniency" or "Specific 
   "status": "CORRECT/MOSTLY_CORRECT/PARTIAL/INCORRECT",
   "explanation": "Summarized high-level assessment.",
   "issues": ["List of specific logical or syntax errors found in the submission."],
-  "dallePrompt": "OPTIONAL: A specific prompt to generate a DALL-E 3 image that provides a visual correction, architectural diagram, or logic flow for the correct solution.",
+  "dallePrompt": "OPTIONAL: A specific prompt to generate a DALL-E 3 image for an ARCHITECTURAL DIAGRAM, FLOWCHART, or STATE VISUALIZATION. DO NOT provide a prompt for decorative, abstract, metaphorical, or aesthetic images. Omit this field completely if a technical diagram is not necessary.",
   "correctSolution": "The full correct code OR the correct MCQ explanation.",
   "encouragement": "Brief encouraging closing."
 }

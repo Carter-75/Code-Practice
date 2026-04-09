@@ -208,12 +208,15 @@ exports.evaluateSolution = async (req, res) => {
     // Determine if we have a visual submission (drawing)
     const isImage = typeof userCode === 'string' && userCode.startsWith('data:image');
 
+    const visualAidInstruction = "REMINDER: DO NOT provide a dallePrompt unless you are providing a mandatory reference diagram for analysis. If no technical diagram is strictly necessary for the explanation, omit the dallePrompt entirely. Decorative/abstract images are strictly forbidden.";
+
     const prompt = `
       ${systemInstruction}
       QUESTION TYPE: ${type || 'code'}
       CHALLENGE CONTEXT: ${questionPrompt}
       CURATED RULES: ${JSON.stringify(context.ai_rules)}
       ADAPTIVE EVOLUTION RULES: ${JSON.stringify(evolutionData.rules)}
+      VISUAL AID POLICY: ${visualAidInstruction}
       THE SPECIFIC CHALLENGE: ${question}
       STUDENT SUBMISSION: ${isImage ? '[VISUAL SKETCH ATTACHED]' : userCode}
     `;
