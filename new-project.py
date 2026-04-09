@@ -805,7 +805,6 @@ export class App implements OnInit {{
             "functions": {
                 "app.js": {
                     "includeFiles": [
-                        "prompts/**",
                         "services/**",
                         "models/**",
                         "controllers/**",
