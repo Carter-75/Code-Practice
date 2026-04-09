@@ -134,7 +134,10 @@ def main():
             "morgan": "~1.10.0",
             "mongoose": "^8.0.0",
             "helmet": "^7.1.0",
-            "dotenv": "^16.4.5"
+            "dotenv": "^16.4.5",
+            "openai": "^4.55.0",
+            "ws": "^8.18.0",
+            "zod": "^3.23.8"
         },
         "devDependencies": {
             "nodemon": "^3.1.0"
@@ -158,9 +161,51 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 
-const indexRouter = require('./routes/index');
-
 const app = express();
+
+// --- Diagnostic Routes (Moved up for early availability) ---
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'online',
+    cwd: process.cwd(),
+    dirname: __dirname,
+    env: process.env.PRODUCTION === 'true' ? 'production' : 'development',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api/debug-bundle', async (req, res) => {
+  const fs = require('fs').promises;
+  async function listFiles(dir) {
+    let results = [];
+    const list = await fs.readdir(dir, { withFileTypes: true });
+    for (const file of list) {
+      const res = path.resolve(dir, file.name);
+      if (file.isDirectory()) {
+        results.push({ name: file.name, type: 'dir', children: await listFiles(res) });
+      } else {
+        results.push({ name: file.name, type: 'file' });
+      }
+    }
+    return results;
+  }
+  try {
+    const root = await listFiles(process.cwd());
+    res.json({ root });
+  } catch (err) {
+    res.status(500).json({ error: err.message, stack: err.stack });
+  }
+});
+
+let aiRouter;
+try {
+  // We assume aiRouter might be added later or exist in certain flavors
+  // For the general template, we'll keep it as a placeholder or empty
+} catch (err) {
+  console.error('FATAL: Failed to load aiRouter:', err);
+}
+
+const indexRouter = require('./routes/index');
 
 const PROJECT_NAME = process.env.PROJECT_NAME || 'Portfolio Project';
 
@@ -215,6 +260,9 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api', indexRouter);
+if (aiRouter) {
+  app.use('/api/ai', aiRouter);
+}
 
 // Error handler
 app.use((err, req, res, next) => {

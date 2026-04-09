@@ -23,12 +23,16 @@ const getSafePath = (relativePath) => {
   ];
 
   for (const candidate of candidates) {
-    // We use a sync check here only for the initial resolution to ensure we have the winning path
     try {
       const fsSync = require('fs');
-      if (fsSync.existsSync(candidate)) return candidate;
+      if (fsSync.existsSync(candidate)) {
+        console.log(`OK: Resolved Resource Path: [${candidate}]`);
+        return candidate;
+      }
     } catch (e) { /* continue */ }
   }
+
+  console.warn(`WARN: Resource Not Found in Candidates. Falling back to: [${candidates[0]}]`);
 
   // Fallback to primary if nothing found (will throw explicit error on read)
   return candidates[0];

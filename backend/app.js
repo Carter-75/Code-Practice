@@ -7,10 +7,50 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const helmet = require('helmet');
 
-const indexRouter = require('./routes/index');
-const aiRouter = require('./routes/ai');
-
 const app = express();
+
+// --- Diagnostic Routes (Moved up for early availability) ---
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'online',
+    cwd: process.cwd(),
+    dirname: __dirname,
+    env: process.env.PRODUCTION === 'true' ? 'production' : 'development',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api/debug-bundle', async (req, res) => {
+  const fs = require('fs').promises;
+  async function listFiles(dir) {
+    let results = [];
+    const list = await fs.readdir(dir, { withFileTypes: true });
+    for (const file of list) {
+      const res = path.resolve(dir, file.name);
+      if (file.isDirectory()) {
+        results.push({ name: file.name, type: 'dir', children: await listFiles(res) });
+      } else {
+        results.push({ name: file.name, type: 'file' });
+      }
+    }
+    return results;
+  }
+  try {
+    const root = await listFiles(process.cwd());
+    res.json({ root });
+  } catch (err) {
+    res.status(500).json({ error: err.message, stack: err.stack });
+  }
+});
+
+let aiRouter;
+try {
+  aiRouter = require('./routes/ai');
+} catch (err) {
+  console.error('FATAL: Failed to load aiRouter:', err);
+}
+
+const indexRouter = require('./routes/index');
 
 // Temporary route for AI to view screenshots during curriculum extraction
 app.use('/debug/images', express.static(path.join(__dirname, '../temp_prompt_extract/Prompt')));
@@ -63,46 +103,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// --- Diagnostic Routes (Hardening) ---
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'online',
-    cwd: process.cwd(),
-    dirname: __dirname,
-    env: process.env.PRODUCTION === 'true' ? 'production' : 'development',
-    timestamp: new Date().toISOString()
-  });
-});
-
-app.get('/api/debug-bundle', async (req, res) => {
-  const fs = require('fs').promises;
-  async function listFiles(dir) {
-    let results = [];
-    const list = await fs.readdir(dir, { withFileTypes: true });
-    for (const file of list) {
-      const res = path.resolve(dir, file.name);
-      if (file.isDirectory()) {
-        results.push({ name: file.name, type: 'dir', children: await listFiles(res) });
-      } else {
-        results.push({ name: file.name, type: 'file' });
-      }
-    }
-    return results;
-  }
-  try {
-    const root = await listFiles(process.cwd());
-    res.json({ root });
-  } catch (err) {
-    res.status(500).json({ error: err.message, stack: err.stack });
-  }
-});
-
-app.get('/', (req, res) => {
-  res.send(`API for ${PROJECT_NAME} is running at /api`);
-});
-
 app.use('/api', indexRouter);
-app.use('/api/ai', aiRouter);
+if (aiRouter) {
+  app.use('/api/ai', aiRouter);
+} else {
+  app.use('/api/ai', (req, res) => {
+    res.status(503).json({ error: 'AI services are currently unavailable due to an initialization failure.' });
+  });
+}
 
 // Error handler
 app.use((err, req, res, next) => {
