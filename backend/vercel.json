@@ -3,8 +3,8 @@
   "functions": {
     "app.js": {
       "includeFiles": [
-        "prompts/**",
         "services/**",
+        "prompts/**",
         "models/**",
         "controllers/**",
         "routes/**"
