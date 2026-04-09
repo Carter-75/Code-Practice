@@ -148,7 +148,7 @@ def main():
 const path = require('path');
 const fs = require('fs');
 const resolveEnvPath = () => {
-  const candidates = [path.join(process.cwd(), '.env'), path.join(process.cwd(), 'backend', '.env')];
+  const candidates = [path.join(process.cwd(), '.env.local'), path.join(process.cwd(), 'backend', '.env.local')];
   for (const c of candidates) { if (fs.existsSync(c)) return c; }
   return candidates[0];
 };
@@ -162,6 +162,8 @@ const mongoose = require('mongoose');
 const helmet = require('helmet');
 
 const app = express();
+
+require('dotenv').config({ path: require('path').join(__dirname, '../.env.local') });
 
 // --- Diagnostic Routes (Moved up for early availability) ---
 app.get('/api/health', (req, res) => {
@@ -219,7 +221,7 @@ const mongoURI = process.env.MONGODB_URI;
       console.log('INFO: Continuing without database features...');
     });
 } else {
-  console.log('INFO: No MONGODB_URI found in .env. Database features disabled.');
+  console.log('INFO: No MONGODB_URI found in .env.local. Database features disabled.');
 }
 
 // --- Middlewares ---
@@ -276,7 +278,7 @@ module.exports = app;
 """
 
     be_www = """#!/usr/bin/env node
-require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
+require('dotenv').config({ path: require('path').join(__dirname, '../../.env.local') });
 const app = require('../app');
 const http = require('http');
 
@@ -588,7 +590,7 @@ A full-stack MEAN application (MongoDB, Express, Angular, Node) generated with a
 ## Getting Started
 
 ### 1. Configure Environment
-A `.env` file is located at the root. Update your `MONGODB_URI` if needed.
+A `.env.local` file is located at the root. Update your `MONGODB_URI` if needed.
 
 ### 2. Run Backend
 ```bash
@@ -881,10 +883,10 @@ PRODUCTION=false
 PROD_BACKEND_URL=
 PROD_FRONTEND_URL=
 """
-    (project_root / ".env").write_text(env_content, encoding='utf-8')
+    (project_root / ".env.local").write_text(env_content, encoding='utf-8')
 
     # --- Root Files ---
-    (project_root / ".gitignore").write_text("node_modules/\ndist/\n.env\n.angular/\n.vscode/\n", encoding='utf-8')
+    (project_root / ".gitignore").write_text("node_modules/\ndist/\n.env.local\n.angular/\n.vscode/\n", encoding='utf-8')
     (project_root / "README.md").write_text(fe_readme, encoding='utf-8')
 
     # AI Config
@@ -892,7 +894,7 @@ PROD_FRONTEND_URL=
 - **File Deletions**: When deleting multiple files, do so one at a time.
 - **Syntax**: Always use standard Windows PowerShell syntax (e.g., `Remove-Item`, `New-Item`).
 - **Persistence**: If a command fails, try alternative PowerShell methods before giving up.
-- **Privacy**: Never expose the `.env` file content in logs.
+- **Privacy**: Never expose the `.env.local` file content in logs.
 """
 
     if ai_choice == "Agents.md":
@@ -914,7 +916,7 @@ This project follows a decoupled MEAN stack architecture.
 - Always maintain the iframe security headers in `backend/app.js`.
 - Prefer Signals for Angular state.
 - Use standalone components.
-- **Environment**: If you modify the root `.env`, remind the user to `git push` to sync with Vercel.
+- **Environment**: If you modify the root `.env.local`, remind the user to `git push` to sync with Vercel.
 
 {ai_rules_common}
 """, encoding='utf-8')
@@ -948,10 +950,10 @@ Decoupled MEAN Stack (Angular {fe_port} / Express {be_port}).
             print("Linking to Vercel...")
             subprocess.run(["vercel", "link", "--yes"], shell=True, check=True)
             
-            # 3. Sync .env to Vault
-            if (project_root / ".env").exists():
-                print("Syncing .env to Vercel Vault...")
-                with open(project_root / ".env", "r") as f:
+            # 3. Sync .env.local to Vault
+            if (project_root / ".env.local").exists():
+                print("Syncing .env.local to Vercel Vault...")
+                with open(project_root / ".env.local", "r") as f:
                     for line in f:
                         line = line.strip()
                         if line and not line.startswith("#") and "=" in line:
@@ -1022,7 +1024,7 @@ if __name__ == "__main__":
 
         pre_push_hook = """#!/bin/sh
 # Vercel Watcher Hook
-# Syncs local .env to Vercel Vault before every push.
+# Syncs local .env.local to Vercel Vault before every push.
 
 echo \"🚀 Vercel Watcher: Checking environment status...\"
 python sync-env.py

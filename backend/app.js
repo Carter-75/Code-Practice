@@ -1,4 +1,4 @@
-require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+require('dotenv').config({ path: require('path').join(__dirname, '../.env.local') });
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');

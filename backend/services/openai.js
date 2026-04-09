@@ -1,9 +1,9 @@
 const { OpenAI } = require('openai');
 
 function getOpenAIClient() {
-  require('dotenv').config({ path: require('path').join(process.cwd(), '.env') });
+  require('dotenv').config({ path: require('path').join(process.cwd(), '.env.local') });
   if (!process.env.OPENAI_API_KEY) {
-    require('dotenv').config({ path: require('path').join(process.cwd(), 'backend', '.env') });
+    require('dotenv').config({ path: require('path').join(process.cwd(), 'backend', '.env.local') });
   }
   
   if (!process.env.OPENAI_API_KEY) {
