@@ -1,13 +1,14 @@
 {
-  "experimentalServices": {
-    "frontend": {
-      "entrypoint": "frontend",
-      "routePrefix": "/",
-      "framework": "angular"
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/api/ai/:path*",
+      "destination": "https://code-practice-backend.vercel.app/api/ai/:path*"
     },
-    "backend": {
-      "entrypoint": "backend",
-      "routePrefix": "/_/backend"
+    {
+      "source": "/(.*)",
+      "destination": "/frontend/index.html"
     }
-  }
+  ]
 }

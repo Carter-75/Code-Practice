@@ -34,24 +34,15 @@ export class AiService {
   
   // Dynamic API URL mapping
   private get apiUrl(): string {
-    // Environmental "Burn-In" Toggles
-    const isProd = ('__PRODUCTION__' as string) === 'true';
-    const prodBackend = '__PROD_BACKEND_URL__' as string;
-    const prodFrontend = '__PROD_FRONTEND_URL__' as string;
-    
     const host = window.location.hostname;
     const isLocal = host === 'localhost' || host === '127.0.0.1';
     
-    // Explicit Local vs Production logic
-    if (isLocal && !isProd) {
+    // In local development, use the direct local backend port
+    if (isLocal) {
       return 'http://localhost:3000/api/ai';
     }
 
-    if (prodBackend && !prodBackend.startsWith('__')) {
-      return `${prodBackend}/api/ai`;
-    }
-
-    // Default: relative path
+    // In production, use the relative path (handled by Vercel Proxy)
     return '/api/ai';
   }
 

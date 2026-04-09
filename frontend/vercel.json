@@ -3,6 +3,10 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/api/ai/:path*",
+      "destination": "https://code-practice-backend.vercel.app/api/ai/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
