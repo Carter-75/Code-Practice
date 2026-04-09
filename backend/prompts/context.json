@@ -1008,8 +1008,127 @@
           "rationale": "Correlated subqueries are an expert pattern where the inner query depends on the outer one, essential for comparative departmental analysis."
         }
       ]
+    },
+    "flex_scanner": {
+      "metadata": { "name": "Flex (Lexer)", "color": "#008080" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Handling Multi-Line Comments (/* ... */)",
+          "problem": "Implement a Flex rule to skip C-style multi-line comments that are not logical tokens.",
+          "snippet": "\"/*\"([^*]|\\*+[^*/])*\\*+\"/\" ;",
+          "rationale": "Match and ignore C-style comments to ensure they don't interfere with the lexical analysis of actual code."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Case Insensitive Keywords",
+          "problem": "Configure the Flex scanner to match the \"exit\" command regardless of whether it is uppercase, lowercase, or mixed case.",
+          "snippet": "(?i:\"exit\") { return EXIT_TOKEN; }",
+          "rationale": "Uses the standard Flex flag `(?i:)` to ensure consistent keyword recognition across different user input styles."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Basic Hexadecimal Support",
+          "problem": "Expand the lexer to recognize hexadecimal integer literals (e.g., 0xFF) and convert them to decimal integers for the parser.",
+          "snippet": "0x[0-9A-Fa-f]+ { yylval.ival = (int)strtoll(yytext, NULL, 16); return VALUE; }",
+          "rationale": "Supporting multiple number bases (hex/dec) is an expert standard for robust calculators and systems-level tools."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Strict Character Validation",
+          "problem": "Implement a catch-all rule that captures any unrecognized characters and logs a professional lexical error message before terminating.",
+          "snippet": ". { fprintf(stderr, \"Lexical Error: '%s' line %d\\n\", yytext, yyline); exit(1); }",
+          "rationale": "Explicitly handling \"unknown\" characters at the lexer level provides immediate feedback and prevents illegal characters from reaching the parser."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Tracking Column Numbers",
+          "problem": "Configure the scanner to track the current character column (position in the line) to enable more precise error reporting.",
+          "snippet": "%{ int yycol = 1; %}\n\"+\" { yycol++; return PLUS; }\n\\n { yyline++; yycol = 1; }",
+          "rationale": "Tracking column data is an expert requirement for modern IDEs and compilers to point users to the exact location of a syntax error."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Scientific Notation Literals",
+          "problem": "Design a regular expression for the lexer that correctly identifies numbers in scientific notation (e.g., 1e10).",
+          "snippet": "[0-9]+\"e\"[0-9]+ { /* custom parse logic */ return VALUE; }",
+          "rationale": "Scanning advanced numeric formats like scientific notation is necessary for engineering-grade arithmetic interpreters."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "State-Based Strings",
+          "problem": "Use Flex start conditions (exclusive states) to handle complex string literal tokens that may contain escaped characters or spanning lines.",
+          "snippet": "%x STR\n\\\" { BEGIN(STR); }\n<STR>[^\\\"]* { /* save string */ }\n<STR>\\\" { BEGIN(INITIAL); return STRING; }",
+          "rationale": "Start conditions (states) are the expert way to handle multi-token constructs like strings or nested comments within a flat DFA-based scanner."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "In-Scanner Constant Folding",
+          "problem": "Implement a lexical rule that automatically resolves named constants (like PI) into their numeric values before passing them to the parser.",
+          "snippet": "\"PI\" { yylval.ival = 3; return VALUE; }",
+          "rationale": "Resolving constants at the lexical level can optimize the parser by treating them as literal values rather than variable lookups."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Scanning from Multiple Files",
+          "problem": "Demonstrate the advanced buffer management logic required to switch the scanner's input stream between different files dynamically.",
+          "snippet": "/* Using yy_switch_to_buffer() */",
+          "rationale": "Multi-buffer management is an expert requirement for compilers that support `#include` directives or multi-module source code."
+        }
+      ]
+    },
+    "bison_parser": {
+      "metadata": { "name": "Bison (Parser)", "color": "#800080" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Optional Semicolons",
+          "problem": "Relax the grammar requirements to permit statements to end optionally with a semicolon while maintaining consistent evaluation.",
+          "snippet": "stmt : EQUALS expr ';' { printf(\"result: %d\\n\", $2); } | EQUALS expr { printf(\"result: %d\\n\", $2); } ;",
+          "rationale": "Providing flexible punctuation (like optional semicolons) improves the user experience by making the language less brittle."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Explicit Exit Command",
+          "problem": "Add a direct 'exit' command to the grammar that allows the user to terminate the interpreter session cleanly.",
+          "snippet": "stmt : EXIT_TOKEN { exit(0); } ;",
+          "rationale": "Integrating control-flow commands into the grammar allows for interactive shells and scripts to be managed entirely within the language logic."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Result with Subsets (Binary Output)",
+          "problem": "Modify the interpreter's result action to output the final calculation in both decimal and hexadecimal formats.",
+          "snippet": "stmt : EQUALS expr { printf(\"dec: %d, hex: 0x%x\\n\", $2, $2); } ;",
+          "rationale": "Multi-modal output is an expert standard for debugging tools where viewing the same data in different formats is frequently necessary."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Adding a Modulo Operator (%)",
+          "problem": "Extend the parser grammar to support the modulo operator with the same precedence as multiplication and division.",
+          "snippet": "term : term MOD factor {\n    if($3 == 0) { /* div by zero check */ }\n    $$ = $1 % $3;\n}",
+          "rationale": "Implementing core arithmetic operators like modulo is a fundamental task for building complete expression evaluators."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Adding a Power Operator (^)",
+          "problem": "Implement a right-associative power operator (exponentiation) in the parser grammar, ensuring correct evaluation order.",
+          "snippet": "factor : primary POWER factor { $$ = (int)pow($1, $3); } | primary ;",
+          "rationale": "Right-associative operators (like exponentiation) require specific recursive grammar patterns to ensure mathematical correctness."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Basic Error Recovery",
+          "problem": "Implement the `error` token in a grammar rule to allow the parser to skip a malformed line and continue processing subsequent valid statements.",
+          "snippet": "stmt : error '\\n' { yyerrok; } ;",
+          "rationale": "Error recovery is an expert standard for compilers, allowing the tool to find multiple errors in a single pass rather than failing on the first one."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Basic Variable Support (Symbol Table)",
+          "problem": "Extend the calculator logic to support variable assignment and retrieval using a simple symbol table integration.",
+          "snippet": "stmt : ID ASSIGN expr { sym_table_set($1, $3); } ;\nfactor : ID { $$ = sym_table_get($1); } ;",
+          "rationale": "Variables transform a simple expression evaluator into a stateful interpreter, an expert foundational step for full language development."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Conditional Selection (Ternary Operator)",
+          "problem": "Implement a ternary conditional operator (e.g., `condition ? expr1 : expr2`) within the expression grammar.",
+          "snippet": "expr : expr QMARK expr COLON expr { $$ = $1 ? $3 : $5; } ;",
+          "rationale": "Ternary operators add logical flow to expressions, requiring careful precedence management to avoid ambiguous grammar conflicts."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Abstract Syntax Tree (AST) Construction",
+          "problem": "Redesign the parser semantic actions to build an Abstract Syntax Tree (AST) for later execution or optimization, instead of immediate evaluation.",
+          "snippet": "expr : expr PLUS term { $$ = new_node(OP_PLUS, $1, $3); } ;",
+          "rationale": "Constructing an AST is the expert way to represent source code internally, facilitating advanced tasks like optimization and code generation."
+        }
+      ]
     }
   },
+
   "ai_rules": {
     "global_strictness": "Strict logic evaluation. Focus on expert patterns found in curriculum. Mandatory use of JSON for API responses.",
     "method_rotation": [ "GET", "POST", "PUT", "DELETE", "PATCH" ],
