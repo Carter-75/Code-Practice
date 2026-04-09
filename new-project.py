@@ -93,6 +93,18 @@ def main():
         options=["Agents.md", "Cursor", "Claude", "None"]
     )
 
+    fe_hosting = ask_input(
+        "Frontend Hosting",
+        default="vercel",
+        options=["vercel", "other"]
+    )
+
+    be_hosting = ask_input(
+        "Backend Hosting",
+        default="vercel",
+        options=["vercel", "other"]
+    )
+    
     project_root = Path.cwd() / project_name
     if project_root.exists():
         print(f"Error: Directory {project_name} already exists.")
@@ -386,7 +398,50 @@ export const appConfig: ApplicationConfig = {
 };
 """
 
-    fe_app_routes_ts = "import { Routes } from '@angular/router';\n\nexport const routes: Routes = [];\n"
+    # --- ApiService Template (Simplified & General) ---
+    fe_api_service_ts = f"""import {{ Injectable, inject }} from '@angular/core';
+import {{ HttpClient }} from '@angular/common/http';
+import {{ Observable }} from 'rxjs';
+
+@Injectable({{
+  providedIn: 'root'
+}})
+export class ApiService {{
+  private http = inject(HttpClient);
+  
+  // Dynamic API URL mapping
+  private get apiUrl(): string {{
+    // Environmental "Burn-In" Toggles
+    const isProd = ('__PRODUCTION__' as string) === 'true';
+    const prodBackend = '__PROD_BACKEND_URL__' as string;
+    
+    const host = window.location.hostname;
+    const isLocal = host === 'localhost' || host === '127.0.0.1';
+    
+    // In local development (and if not explicitly forced to prod), use local server
+    if (isLocal && !isProd) {{
+      return 'http://localhost:{be_port}/api';
+    }}
+
+    // In production, use the relative path (handled by Vercel Proxy)
+    return '/api';
+  }}
+
+  /**
+   * Universal GET wrapper
+   */
+  getData(endpoint: string): Observable<any> {{
+    return this.http.get(`${{this.apiUrl}}/${{endpoint}}`);
+  }}
+
+  /**
+   * Universal POST wrapper
+   */
+  postData(endpoint: string, body: any): Observable<any> {{
+    return this.http.post(`${{this.apiUrl}}/${{endpoint}}`, body);
+  }}
+}}
+"""
 
     # --- Frontend Tooling Templates ---
     fe_tsconfig_json = {
@@ -738,9 +793,9 @@ MONGODB_URI=mongodb://localhost:27017/{project_name}
 # --- Front-End Production (Copy to Vercel Frontend Project) ---
 # NOTE: Run 'vercel link' once in this directory to enable the Automated Vault Sync!
 PRODUCTION=false
-PROD_FRONTEND_URL=
 
-# --- Back-End Production (Copy to Vercel Backend Project) ---
+# --- Back-End Production ---
+# ONCE DEPLOYED: Update your vercel.json 'destination' to match this URL!
 PROD_BACKEND_URL=
 """
     (project_root / ".env").write_text(env_content, encoding='utf-8')
