@@ -804,12 +804,7 @@ export class App implements OnInit {{
             "version": 2,
             "functions": {
                 "app.js": {
-                    "includeFiles": [
-                        "services/**",
-                        "models/**",
-                        "controllers/**",
-                        "routes/**"
-                    ]
+                    "includeFiles": "{services,prompts,models,controllers,routes}/**"
                 }
             },
             "rewrites": [
