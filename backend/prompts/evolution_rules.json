@@ -1,0 +1,9 @@
+{
+  "rules": [
+    {
+      "timestamp": "2026-04-09T10:50:00.000Z",
+      "feedback_received": "The grading is too strict on minor syntax errors. Missing brackets and incorrect capitalization of class names should be marked as MOSTLY_CORRECT rather than PARTIAL if the core logic is present.",
+      "evolution_rule": "Be extremely lenient on syntax issues in code submissions. Missing or mismatched brackets (such as for function bodies or try/catch blocks) and minor capitalization errors (e.g., using 'user' instead of 'User' for instantiation) should NOT be penalized as logical errors. Grade submissions with these issues as MOSTLY_CORRECT, not PARTIAL, as long as the core logic/flow is present."
+    }
+  ]
+}

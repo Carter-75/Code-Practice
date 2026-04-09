@@ -312,7 +312,8 @@ exports.submitFeedback = async (req, res) => {
       1. Analyze the feedback in the context of ALL existing rules and prompts.
       2. Determine if a behavioral shift is needed (e.g., "be more lenient on syntax", "focus more on security during evaluation").
       3. Generate a SINGLE, CONCISE system adjustment rule (max 2 sentences).
-      4. Return a JSON object with a single key "new_rule".
+      4. Paraphrase the user's original feedback into a short, clear summary (max 1 sentence).
+      5. Return a JSON object with two keys: "new_rule" and "paraphrased_feedback".
       
       RETURN ONLY THE JSON.
     `;
@@ -323,6 +324,7 @@ exports.submitFeedback = async (req, res) => {
     if (jsonMatch) {
       const result = JSON.parse(jsonMatch[0]);
       const newRule = result.new_rule;
+      const paraphrasedFeedback = result.paraphrased_feedback || feedback;
 
       // Update evolution_rules.json instead of context.json
       const evolutionData = await getEvolutionRules();
@@ -330,7 +332,7 @@ exports.submitFeedback = async (req, res) => {
 
       evolutionData.rules.push({
         timestamp: new Date().toISOString(),
-        feedback_received: feedback,
+        feedback_received: paraphrasedFeedback,
         evolution_rule: newRule
       });
 
