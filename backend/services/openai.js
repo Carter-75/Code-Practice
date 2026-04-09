@@ -1,5 +1,8 @@
 const { OpenAI } = require('openai');
-require('dotenv').config({ path: require('path').join(__dirname, '../../.env') });
+require('dotenv').config({ path: require('path').join(process.cwd(), '.env') });
+if (!process.env.OPENAI_API_KEY) {
+  require('dotenv').config({ path: require('path').join(process.cwd(), 'backend', '.env') });
+}
 
 const openai = new OpenAI({
   apiKey: (process.env.OPENAI_API_KEY || '').trim(),

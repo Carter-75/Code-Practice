@@ -6,23 +6,51 @@ const openaiService = require('../services/openai');
 const getSafePath = (relativePath) => {
   const base = process.cwd();
   
-  // 1. Vercel Write Path Redirect
-  if (process.env.VERCEL && (relativePath.includes('extracted_patterns') || relativePath.includes('evolution_rules'))) {
-    return path.join('/tmp', path.basename(relativePath));
+  // 1. Vercel Write Path Redirect (Always use /tmp for persistence on the cloud)
+  const isVercel = process.env.VERCEL === '1' || process.env.PRODUCTION === 'true';
+  const isWritableFile = relativePath.includes('extracted_patterns') || relativePath.includes('evolution_rules');
+  
+  if (isVercel && isWritableFile) {
+    return { primaryPath: path.join('/tmp', path.basename(relativePath)) };
   }
 
-  // 2. Try Absolute from CWD (Standard)
+  // 2. Build the Triple-Check Object
   const primaryPath = path.join(base, relativePath);
+  const backupPath = path.join(base, 'backend', relativePath);
+  const tertiaryPath = path.join(__dirname, '..', relativePath);
   
-  // 3. Try Monorepo Subfolder mapping (If CWD is the Repo Root)
-  if (!relativePath.startsWith('backend/')) {
-    const backupPath = path.join(base, 'backend', relativePath);
-    // Note: We'll decide which one to use at runtime via a probe in getContext
-    return { primaryPath, backupPath };
-  }
-  
-  return { primaryPath };
+  return { primaryPath, backupPath, tertiaryPath };
 };
+
+async function readFileSafe(paths) {
+  // If we have a single writable path from Vercel redirect, use it directly
+  if (!paths.backupPath && !paths.tertiaryPath) {
+    try {
+      return await fs.readFile(paths.primaryPath, 'utf-8');
+    } catch (e) {
+      // For writable files in /tmp, it's okay if they don't exist yet
+      if (paths.primaryPath.startsWith('/tmp')) return null;
+      throw e;
+    }
+  }
+
+  // Otherwise, exhaust all possibilities for knowledge base files
+  try {
+    return await fs.readFile(paths.primaryPath, 'utf-8');
+  } catch (e) {
+    try {
+      if (!paths.backupPath) throw e;
+      return await fs.readFile(paths.backupPath, 'utf-8');
+    } catch (e2) {
+      try {
+        if (!paths.tertiaryPath) throw e2;
+        return await fs.readFile(paths.tertiaryPath, 'utf-8');
+      } catch (e3) {
+        throw new Error(`CRITICAL: Knowledge Base Missing. Checked: [${paths.primaryPath}], [${paths.backupPath}], [${paths.tertiaryPath}]. Root was: ${process.cwd()}`);
+      }
+    }
+  }
+}
 
 const PATHS = {
   context: getSafePath('prompts/context.json'),
@@ -30,34 +58,20 @@ const PATHS = {
   extracted: getSafePath('prompts/extracted_patterns.json')
 };
 
-async function readFileSafe(paths) {
-  try {
-    return await fs.readFile(paths.primaryPath, 'utf-8');
-  } catch (e) {
-    if (paths.backupPath) {
-      try {
-        return await fs.readFile(paths.backupPath, 'utf-8');
-      } catch (e2) {
-        throw new Error(`CRITICAL: Knowledge Base Missing. Checked Primary: [${paths.primaryPath}] AND Backup: [${paths.backupPath}]. Root was: ${process.cwd()}`);
-      }
-    }
-    throw new Error(`CRITICAL: Knowledge Base Missing. Checked: [${paths.primaryPath}]. Root was: ${process.cwd()}`);
-  }
-}
-
 async function getContext() {
   const data = await readFileSafe(PATHS.context);
   return JSON.parse(data);
 }
 
 async function saveContext(context) {
-  const savePath = PATHS.context.primaryPath;
-  await fs.writeFile(savePath, JSON.stringify(context, null, 2));
+  // We prioritize the primary path (which could be /tmp in prod)
+  await fs.writeFile(PATHS.context.primaryPath, JSON.stringify(context, null, 2));
 }
 
 async function getEvolutionRules() {
   try {
     const data = await readFileSafe(PATHS.evolution);
+    if (!data) return { rules: [] };
     return JSON.parse(data);
   } catch (e) {
     return { rules: [] };
@@ -65,8 +79,7 @@ async function getEvolutionRules() {
 }
 
 async function saveEvolutionRules(rules) {
-  const savePath = PATHS.evolution.primaryPath;
-  await fs.writeFile(savePath, JSON.stringify(rules, null, 2));
+  await fs.writeFile(PATHS.evolution.primaryPath, JSON.stringify(rules, null, 2));
 }
 
 async function getPrompt(filename) {
