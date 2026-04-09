@@ -10,15 +10,14 @@ def sync_vercel_env():
         print("?? No .env file found in the root. Skipping sync.")
         return
 
-    print("🚀 Vercel Watcher: Syncing local .env to Production Vault...")
+    print("Vercel Watcher: Syncing local .env to Production Vault...")
     
     try:
-        # We assume the project is linked since you ran 'vercel link' manually
-        # If it's not, the vercel env add command will give a helpful error anyway
+        # We assume the project is linked (via 'vercel link' or similar)
+        # The 'env add' command will handle link errors if they occur
         with open(env_path, "r", encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
-                # Skip comments and empty lines
                 if not line or line.startswith("#") or "=" not in line:
                     continue
                 
@@ -27,19 +26,17 @@ def sync_vercel_env():
                 val = val.strip()
                 
                 if key and val:
-                    # Sync to Vercel Production
-                    # --yes and --non-interactive handle prompts
                     subprocess.run(
                         ["vercel", "env", "add", key, val, "production", "--non-interactive", "--yes"],
                         shell=True,
                         capture_output=True
                     )
-                    print(f"   ? Synced: {key}")
+                    print(f"   Synced: {key}")
 
-        print("? Vercel Vault is now up to date.")
+        print("Vercel Vault is now up to date.")
 
     except Exception as e:
-        print(f"?? Error during Vercel sync: {e}")
+        print(f"Error during Vercel sync: {e}")
 
 if __name__ == "__main__":
     sync_vercel_env()

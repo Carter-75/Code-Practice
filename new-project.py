@@ -141,7 +141,10 @@ def main():
         }
     }
 
-    be_app_js = """require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
+    be_app_js = """require('dotenv').config({ path: require('path').join(process.cwd(), '.env') });
+if (!process.env.PROJECT_NAME) {
+  require('dotenv').config({ path: require('path').join(process.cwd(), 'backend', '.env') });
+}
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -733,18 +736,30 @@ export class App implements OnInit {{
     
     if fe_hosting == "vercel" or be_hosting == "vercel":
         root_vercel_json = {
+            "version": 2,
             "cleanUrls": True,
             "trailingSlash": False,
+            "functions": {
+                "backend/app.js": {
+                    "runtime": "@vercel/node"
+                }
+            },
             "rewrites": [
                 { "source": "/api/:path*", "destination": "/backend/app.js" },
                 { "source": "/(.*)", "destination": "/frontend/index.html" }
             ],
-            "functions": {
-                "backend/app.js": {
-                    "runtime": "@vercel/node",
-                    "includeFiles": "backend/prompts/**"
+            "headers": [
+                {
+                    "source": "/(.*)",
+                    "headers": [
+                        { "key": "X-Frame-Options", "value": "ALLOWALL" },
+                        { 
+                            "key": "Content-Security-Policy", 
+                            "value": "frame-ancestors 'self' https://carter-portfolio.fyi https://carter-portfolio.vercel.app https://*.vercel.app http://localhost:3000" 
+                        }
+                    ]
                 }
-            }
+            ]
         }
         (project_root / "vercel.json").write_text(json.dumps(root_vercel_json, indent=2), encoding='utf-8')
 
@@ -906,35 +921,35 @@ def sync_vercel_env():
         print(\"?? No .env file found in the root. Skipping sync.\")
         return
 
-    print(\"🚀 Vercel Watcher: Syncing local .env to Production Vault...\")
+    print("Vercel Watcher: Syncing local .env to Production Vault...")
     
     try:
         # We assume the project is linked (via 'vercel link' or similar)
         # The 'env add' command will handle link errors if they occur
-        with open(env_path, \"r\", encoding='utf-8') as f:
+        with open(env_path, "r", encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
-                if not line or line.startswith(\"#\") or \"=\" not in line:
+                if not line or line.startswith("#") or "=" not in line:
                     continue
                 
-                key, val = line.split(\"=\", 1)
+                key, val = line.split("=", 1)
                 key = key.strip()
                 val = val.strip()
                 
                 if key and val:
                     subprocess.run(
-                        [\"vercel\", \"env\", \"add\", key, val, \"production\", \"--non-interactive\", \"--yes\"],
+                        ["vercel", "env", "add", key, val, "production", "--non-interactive", "--yes"],
                         shell=True,
                         capture_output=True
                     )
-                    print(f\"   ? Synced: {key}\")
+                    print(f"   Synced: {key}")
 
-        print(\"? Vercel Vault is now up to date.\")
+        print("Vercel Vault is now up to date.")
 
     except Exception as e:
-        print(f\"?? Error during Vercel sync: {e}\")
+        print(f"Error during Vercel sync: {e}")
 
-if __name__ == \"__main__\":
+if __name__ == "__main__":
     sync_vercel_env()
 """
         (project_root / "sync-env.py").write_text(sync_env_py, encoding='utf-8')
