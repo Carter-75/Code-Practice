@@ -298,7 +298,7 @@ module.exports = router;
                     "build": {
                         "builder": "@angular/build:application",
                         "options": {
-                            "outputPath": "dist/frontend",
+                            "outputPath": "dist/frontend/browser",
                             "index": "src/index.html",
                             "browser": "src/main.ts",
                             "tsConfig": "tsconfig.app.json",
@@ -661,28 +661,29 @@ export class App {{
     (backend_root / "routes" / "index.js").write_text(be_routes_index, encoding='utf-8')
     (backend_root / "models").mkdir()
     
-    fe_vercel_json = {
-        "rewrites": [
-            { "source": "/(.*)", "destination": "/index.html" }
-        ]
-    }
-    (frontend_root / "vercel.json").write_text(json.dumps(fe_vercel_json, indent=2), encoding='utf-8')
+    if fe_hosting == "vercel":
+        fe_vercel_json = {
+            "rewrites": [
+                { "source": "/(.*)", "destination": "/index.html" }
+            ]
+        }
+        (frontend_root / "vercel.json").write_text(json.dumps(fe_vercel_json, indent=2), encoding='utf-8')
 
-    vercel_config = {
-        "headers": [
-            {
-                "source": "/(.*)",
-                "headers": [
-                    { "key": "X-Frame-Options", "value": "ALLOWALL" },
-                    { 
-                        "key": "Content-Security-Policy", 
-                        "value": "frame-ancestors 'self' https://carter-portfolio.fyi https://carter-portfolio.vercel.app https://*.vercel.app http://localhost:3000" 
-                    }
-                ]
-            }
-        ]
-    }
-    (backend_root / "vercel.json").write_text(json.dumps(vercel_config, indent=2), encoding='utf-8')
+        vercel_config = {
+            "headers": [
+                {
+                    "source": "/(.*)",
+                    "headers": [
+                        { "key": "X-Frame-Options", "value": "ALLOWALL" },
+                        { 
+                            "key": "Content-Security-Policy", 
+                            "value": "frame-ancestors 'self' https://carter-portfolio.fyi https://carter-portfolio.vercel.app https://*.vercel.app http://localhost:3000" 
+                        }
+                    ]
+                }
+            ]
+        }
+        (backend_root / "vercel.json").write_text(json.dumps(vercel_config, indent=2), encoding='utf-8')
 
     # --- Write Frontend ---
     (frontend_root / "package.json").write_text(json.dumps(fe_package_json, indent=2), encoding='utf-8')
