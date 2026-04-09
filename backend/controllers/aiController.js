@@ -4,6 +4,7 @@ const openaiService = require('../services/openai');
 
 // Load the master knowledge base
 const CONTEXT_PATH = path.join(__dirname, '../prompts/context.json');
+const EVOLUTION_PATH = path.join(__dirname, '../prompts/evolution_rules.json');
 
 async function getContext() {
   const data = await fs.readFile(CONTEXT_PATH, 'utf-8');
@@ -12,6 +13,19 @@ async function getContext() {
 
 async function saveContext(context) {
   await fs.writeFile(CONTEXT_PATH, JSON.stringify(context, null, 2));
+}
+
+async function getEvolutionRules() {
+  try {
+    const data = await fs.readFile(EVOLUTION_PATH, 'utf-8');
+    return JSON.parse(data);
+  } catch (e) {
+    return { rules: [] };
+  }
+}
+
+async function saveEvolutionRules(rules) {
+  await fs.writeFile(EVOLUTION_PATH, JSON.stringify(rules, null, 2));
 }
 
 async function getPrompt(filename) {
@@ -58,6 +72,9 @@ exports.generateNewQuestion = async (req, res) => {
     // Final reminder on visual aids
     const visualAidInstruction = "REMINDER: DO NOT provide a dallePrompt unless you are providing a mandatory reference diagram for analysis. If the user can answer without seeing a picture, omit the dallePrompt.";
 
+    // Load evolution rules
+    const evolutionData = await getEvolutionRules();
+
     const fullPrompt = `
       ${systemInstruction}
       
@@ -75,10 +92,15 @@ exports.generateNewQuestion = async (req, res) => {
       ### VISUAL AID POLICY
       ${visualAidInstruction}
       
+      ### SYSTEM CONTEXT & RULES
+      CURATED RULES: ${JSON.stringify(context.ai_rules)}
+      ADAPTIVE EVOLUTION RULES: ${JSON.stringify(evolutionData.rules)}
+      
       ### INSTRUCTION
       Your task is to transform the provided CHALLENGE DATA into a high-fidelity training challenge.
       DO NOT copy the PROBLEM_KEY verbatim; rephrase it into a professional academic task.
       ALWAYS include the TECHNICAL_RATIONALE in your explanation.
+      STRICTLY ADHERE to the CURATED RULES and ADAPTIVE EVOLUTION RULES.
     `;
 
     const aiResponse = await openaiService.getChatCompletion(fullPrompt);
@@ -114,10 +136,11 @@ exports.evaluateSolution = async (req, res) => {
   const { question, userCode, type } = req.body;
 
   try {
-    const [systemInstruction, context, questionPrompt] = await Promise.all([
+    const [systemInstruction, context, questionPrompt, evolutionData] = await Promise.all([
       getPrompt('evaluationPrompt.txt'),
       getContext(),
-      getPrompt('questionPrompt.txt')
+      getPrompt('questionPrompt.txt'),
+      getEvolutionRules()
     ]);
     
     // Determine if we have a visual submission (drawing)
@@ -128,6 +151,7 @@ exports.evaluateSolution = async (req, res) => {
       QUESTION TYPE: ${type || 'code'}
       CHALLENGE CONTEXT: ${questionPrompt}
       CURATED RULES: ${JSON.stringify(context.ai_rules)}
+      ADAPTIVE EVOLUTION RULES: ${JSON.stringify(evolutionData.rules)}
       THE SPECIFIC CHALLENGE: ${question}
       STUDENT SUBMISSION: ${isImage ? '[VISUAL SKETCH ATTACHED]' : userCode}
     `;
@@ -185,34 +209,76 @@ exports.skipQuestion = async (req, res) => {
 };
 
 exports.submitFeedback = async (req, res) => {
-  const { feedback, currentContext } = req.body;
+  const { feedback } = req.body;
 
   try {
-    const context = await getContext();
+    const PROMPTS_DIR = path.join(__dirname, '../prompts');
+    const files = await fs.readdir(PROMPTS_DIR);
+    
+    // Read all txt and json files for holistic context as requested
+    const allContextData = await Promise.all(
+      files.filter(f => f.endsWith('.txt') || f.endsWith('.json')).map(async f => {
+        const content = await fs.readFile(path.join(PROMPTS_DIR, f), 'utf-8');
+        return `FILE: ${f}\nCONTENT:\n${content}\n---`;
+      })
+    );
+
+    // Fetch last session for specific evaluation context
+    let lastSession = "No recent session data available.";
+    try {
+      const EXTR_PATH = path.join(__dirname, '../prompts/extracted_patterns.json');
+      const fileContent = await fs.readFile(EXTR_PATH, 'utf-8');
+      const data = JSON.parse(fileContent);
+      if (data.extracted_lessons && data.extracted_lessons.length > 0) {
+        lastSession = JSON.stringify(data.extracted_lessons[data.extracted_lessons.length - 1]);
+      }
+    } catch (e) { /* ignore */ }
+
     const reflectionInstruction = `
-      YOU ARE THE EXPERT TUTOR REFLECTION ENGINE.
-      THE USER HAS PROVIDED FEEDBACK ON YOUR PERFORMANCE OR THE DIFFICULTY.
+      YOU ARE THE EXPERT TUTOR SELF-EVOLUTION ENGINE.
       
-      FEEDBACK: "${feedback}"
-      CURRENT CONTEXT: ${JSON.stringify(context)}
+      THE USER HAS PROVIDED CRITIQUE/FEEDBACK ON YOUR RECENT PERFORMANCE.
+      USER FEEDBACK: "${feedback}"
+      
+      CONTEXT OF LAST SESSION:
+      ${lastSession}
+
+      GLOBAL SYSTEM CONTEXT (All prompts and rules):
+      ${allContextData.join('\n\n')}
 
       TASK:
-      1. Analyze if the feedback requires a global rule change or a specific topic adjustment.
-      2. Return the UPDATED context JSON object.
-      3. Focus on "leniency", "difficulty spikes", or "incorrect patterns" as mentioned by the user.
+      1. Analyze the feedback in the context of ALL existing rules and prompts.
+      2. Determine if a behavioral shift is needed (e.g., "be more lenient on syntax", "focus more on security during evaluation").
+      3. Generate a SINGLE, CONCISE system adjustment rule (max 2 sentences).
+      4. Return a JSON object with a single key "new_rule".
       
-      RETURN ONLY THE UPDATED JSON.
+      RETURN ONLY THE JSON.
     `;
 
     const aiResponse = await openaiService.getChatCompletion(reflectionInstruction);
     const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
     
     if (jsonMatch) {
-      const updatedContext = JSON.parse(jsonMatch[0]);
-      await saveContext(updatedContext);
-      res.json({ message: 'Feedback incorporated! My brain has evolved.', status: 'success' });
+      const result = JSON.parse(jsonMatch[0]);
+      const newRule = result.new_rule;
+      
+      // Update evolution_rules.json instead of context.json
+      const evolutionData = await getEvolutionRules();
+      if (!evolutionData.rules) evolutionData.rules = [];
+      
+      evolutionData.rules.push({
+        timestamp: new Date().toISOString(),
+        feedback_received: feedback,
+        evolution_rule: newRule
+      });
+      
+      // Keep last 10 rules
+      if (evolutionData.rules.length > 10) evolutionData.rules.shift();
+
+      await saveEvolutionRules(evolutionData);
+      res.json({ message: newRule, status: 'success' });
     } else {
-      throw new Error('AI failed to generate valid context update.');
+      throw new Error('AI failed to generate a refinement rule.');
     }
   } catch (error) {
     console.error('Feedback Reflection Error:', error);
