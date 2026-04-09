@@ -250,6 +250,23 @@
         "correctSolution": "function appendStudentToList(ulElementId, fullName, studentId) {\n  const ulElement = document.getElementById(ulElementId);\n  const listItem = document.createElement('li');\n  listItem.textContent = fullName;\n  listItem.setAttribute('data-student-id', studentId);\n  ulElement.appendChild(listItem);\n}",
         "encouragement": "Don't worry! Start by writing a function to append items to a list, and you'll get it soon."
       }
+    },
+    {
+      "timestamp": "2026-04-09T02:26:25.654Z",
+      "type": "resolved_session",
+      "question": "Write a Mongoose query to find all student documents where the age is greater than 18. The query should return only the documents that match this condition.",
+      "user_submission": "const stu= students.filter(s=>s.age>==18)\nreturn stu",
+      "modality": "code",
+      "feedback": {
+        "status": "INCORRECT",
+        "explanation": "The student's submission does not use Mongoose. Instead, it incorrectly attempts to filter an array using JavaScript. This approach is not applicable to querying a MongoDB database using Mongoose.",
+        "issues": [
+          "Incorrect use of JavaScript array filter instead of a Mongoose query.",
+          "Syntax error with 'greater than or equal to' operator: '>==' instead of '>='."
+        ],
+        "correctSolution": "const studentsOver18 = await Student.find({ age: { $gt: 18 } });",
+        "encouragement": "Keep practicing with Mongoose! Understanding the difference between JavaScript array operations and MongoDB queries is crucial."
+      }
     }
   ]
 }

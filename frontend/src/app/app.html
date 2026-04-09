@@ -277,9 +277,17 @@
           </div>
         </div>
 
-        <div class="mt-8 flex justify-center">
-          <button (click)="generateQuestion()" class="text-[10px] font-black tracking-[0.4em] uppercase opacity-40 hover:opacity-100 transition-all">
-            PROCEED →
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-6 sm:gap-12">
+          <button (click)="retryQuestion()" class="group flex items-center text-[10px] font-black tracking-[0.4em] uppercase text-indigo-400/60 hover:text-indigo-400 transition-all px-6 py-3 border border-indigo-500/10 hover:border-indigo-500/30 rounded-2xl bg-indigo-500/5 hover:bg-indigo-500/10 shadow-lg shadow-indigo-500/5">
+            <span class="mr-3 transition-transform group-hover:-translate-x-1">←</span>
+            RETRY
+          </button>
+          
+          <div class="h-px w-8 bg-slate-800 hidden sm:block"></div>
+
+          <button (click)="generateQuestion()" class="group flex items-center text-[10px] font-black tracking-[0.4em] uppercase text-slate-500 hover:text-white transition-all px-6 py-3">
+            PROCEED
+            <span class="ml-3 transition-transform group-hover:translate-x-1">→</span>
           </button>
         </div>
       </div>

@@ -127,6 +127,12 @@ export class App implements AfterViewInit {
     this.generateQuestion();
   }
 
+  retryQuestion() {
+    this.feedback.set(null);
+    this.showFeedbackInput.set(false);
+    this.animateInQuestion();
+  }
+
   onDifficultyChange(newDifficulty: string) {
     this.difficulty.set(newDifficulty);
     localStorage.setItem('appDifficulty', newDifficulty);
