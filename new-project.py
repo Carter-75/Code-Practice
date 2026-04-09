@@ -663,15 +663,8 @@ export class App {{
     
     if fe_hosting == "vercel":
         fe_vercel_json = {
-            "builds": [
-                {
-                    "src": "package.json",
-                    "use": "@vercel/static-build",
-                    "config": {
-                        "distDir": "dist/frontend/browser"
-                    }
-                }
-            ],
+            "cleanUrls": true,
+            "trailingSlash": false,
             "rewrites": [
                 { "source": "/(.*)", "destination": "/index.html" }
             ]
