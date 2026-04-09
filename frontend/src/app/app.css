@@ -18,3 +18,21 @@
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+/* Ensure no horizontal scrolling on mobile */
+body {
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+}
+
+/* Larger touch targets for better mobile experience */
+@media (max-width: 640px) {
+  button, [role="button"] {
+    min-height: 44px;
+  }
+}
+
+/* Prevent text size adjustment on orientation change */
+html {
+  -webkit-text-size-adjust: 100%;
+}

@@ -4,16 +4,16 @@
   <div #scene id="physics-container" class="absolute inset-0 z-0 opacity-40 pointer-events-none"></div>
 
   <!-- Content Layer -->
-  <div class="relative z-10 flex flex-col items-center p-6 sm:p-12 min-h-screen w-full">
+  <div class="relative z-10 flex flex-col items-center p-4 sm:p-12 min-h-screen w-full">
     
-    <header class="mb-12 text-center w-full max-w-4xl" #header>
-      <h1 class="text-4xl sm:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 drop-shadow-sm tracking-tighter">
+    <header class="mb-8 sm:mb-12 text-center w-full max-w-4xl" #header>
+      <h1 class="text-3xl sm:text-6xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 drop-shadow-sm tracking-tighter">
         CODE PRACTITIONER
       </h1>
       <p class="mt-2 text-slate-500 text-[10px] font-black uppercase tracking-[0.5em]">Expert Evolution Curriculum</p>
     </header>
 
-    <div #card class="w-full max-w-5xl bg-slate-900/60 backdrop-blur-3xl border border-slate-800/50 rounded-[2.5rem] shadow-2xl p-6 sm:p-12 overflow-hidden relative">
+    <div #card class="w-full max-w-5xl bg-slate-900/60 backdrop-blur-3xl border border-slate-800/50 rounded-[2rem] sm:rounded-[2.5rem] shadow-2xl p-5 sm:p-12 overflow-hidden relative">
       
       <!-- Loading Overlay -->
       <div *ngIf="isLoading()" class="absolute inset-0 z-[100] bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-12 transition-all">
@@ -32,8 +32,8 @@
       </div>
       
       <!-- Controls Top Bar -->
-      <div class="flex flex-wrap items-center justify-between gap-6 mb-10 pb-8 border-b border-slate-800/50">
-        <div class="flex flex-wrap items-center gap-6">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10 pb-8 border-b border-slate-800/50">
+        <div class="flex flex-col sm:flex-row items-center gap-6">
           <!-- Multi-Select Filter replacement for chips -->
           <!-- Topic Filter Dropdown -->
           <div class="flex items-center space-x-3 relative topic-dropdown-container">
@@ -41,7 +41,7 @@
             
             <button 
               (click)="isTopicDropdownOpen.set(!isTopicDropdownOpen()); isDifficultyDropdownOpen.set(false)"
-              class="bg-indigo-500/5 border border-indigo-500/20 rounded-xl px-4 py-2 text-xs font-black text-indigo-400 hover:bg-indigo-500/10 transition-all flex items-center justify-between min-w-[200px] h-10 shadow-lg shadow-indigo-500/5">
+              class="bg-indigo-500/5 border border-indigo-500/20 rounded-xl px-4 py-2 text-xs font-black text-indigo-400 hover:bg-indigo-500/10 transition-all flex items-center justify-between min-w-[200px] h-12 sm:h-10 shadow-lg shadow-indigo-500/5">
               <span class="mr-2">{{ selectedLanguages().length }} TOPICS ENABLED</span>
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 transition-transform" [ngClass]="isTopicDropdownOpen() ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
@@ -50,7 +50,7 @@
 
             <!-- Topic Menu -->
             <div *ngIf="isTopicDropdownOpen()" 
-              class="absolute top-12 left-[105px] z-50 w-64 bg-slate-900/95 backdrop-blur-3xl border border-slate-800 rounded-3xl shadow-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-300">
+              class="absolute top-12 left-0 sm:left-[105px] right-0 sm:right-auto z-50 sm:w-64 bg-slate-900/95 backdrop-blur-3xl border border-slate-800 rounded-3xl shadow-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-300">
               <div class="max-h-64 overflow-y-auto custom-scrollbar">
                 <div *ngFor="let lang of allLanguages()" 
                   (click)="toggleTopic(lang)"
@@ -74,7 +74,7 @@
             <span class="text-[10px] font-black text-slate-500 tracking-[0.2em] uppercase">Level</span>
             <button 
               (click)="isDifficultyDropdownOpen.set(!isDifficultyDropdownOpen()); isTopicDropdownOpen.set(false)"
-              class="bg-indigo-500/5 border border-indigo-500/20 rounded-xl px-4 py-2 text-xs font-black text-indigo-400 hover:bg-indigo-500/10 transition-all flex items-center justify-between min-w-[120px] h-10 shadow-lg shadow-indigo-500/5">
+              class="bg-indigo-500/5 border border-indigo-500/20 rounded-xl px-4 py-2 text-xs font-black text-indigo-400 hover:bg-indigo-500/10 transition-all flex items-center justify-between min-w-[120px] h-12 sm:h-10 shadow-lg shadow-indigo-500/5">
               <span class="mr-2">{{ difficulty().toUpperCase() }}</span>
               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 transition-transform" [ngClass]="isDifficultyDropdownOpen() ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7" />
@@ -83,7 +83,7 @@
 
             <!-- Difficulty Menu -->
             <div *ngIf="isDifficultyDropdownOpen()" 
-              class="absolute top-12 left-[55px] z-50 w-48 bg-slate-900/95 backdrop-blur-3xl border border-slate-800 rounded-3xl shadow-2xl p-2 animate-in fade-in slide-in-from-top-2 duration-300">
+              class="absolute top-12 left-0 sm:left-[55px] right-0 sm:right-auto z-50 sm:w-48 bg-slate-900/95 backdrop-blur-3xl border border-slate-800 rounded-3xl shadow-2xl p-2 animate-in fade-in slide-in-from-top-2 duration-300">
               <div *ngFor="let level of ['easy', 'medium', 'hard']" 
                 (click)="setDifficulty(level)"
                 class="flex items-center justify-between p-3 rounded-2xl hover:bg-indigo-500/10 cursor-pointer transition-all mb-1 group/item">
@@ -96,12 +96,12 @@
           </div>
         </div>
         
-        <div class="flex items-center space-x-3">
-          <button (click)="skipQuestion()" *ngIf="question()" class="px-5 py-2.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 rounded-xl text-[10px] font-black tracking-widest transition-all">
+        <div class="flex items-center space-x-3 w-full sm:w-auto mt-4 sm:mt-0">
+          <button (click)="skipQuestion()" *ngIf="question()" class="flex-1 sm:flex-none px-5 py-3 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-700/50 rounded-xl text-[10px] font-black tracking-widest transition-all">
             SKIP
           </button>
           <button (click)="generateQuestion()" [disabled]="isLoading() || selectedLanguages().length === 0" 
-            class="px-8 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-30 rounded-xl font-black text-[10px] tracking-[0.2em] transition-all transform hover:shadow-indigo-500/25 shadow-xl flex items-center">
+            class="flex-1 sm:flex-none px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:opacity-30 rounded-xl font-black text-[10px] tracking-[0.2em] transition-all transform hover:shadow-indigo-500/25 shadow-xl flex items-center justify-center">
             <span *ngIf="isLoading()" class="mr-2 animate-spin">⟳</span>
             {{ question() ? 'NEXT CHALLENGE' : 'START SESSION' }}
           </button>
@@ -114,10 +114,10 @@
           <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
           <span class="text-[10px] font-bold text-slate-400 tracking-widest uppercase">{{ question()?.language }} / {{ question()?.type }}</span>
         </div>
-        <h2 class="text-3xl font-black text-white mb-6 leading-tight tracking-tight">
+        <h2 class="text-2xl sm:text-3xl font-black text-white mb-6 leading-tight tracking-tight">
           {{ question()?.title }}
         </h2>
-        <div class="prose prose-invert max-w-none text-slate-400 text-lg leading-relaxed bg-slate-950/20 p-8 rounded-3xl border border-slate-800/50 shadow-inner">
+        <div class="prose prose-invert max-w-none text-slate-400 text-base sm:text-lg leading-relaxed bg-slate-950/20 p-5 sm:p-8 rounded-3xl border border-slate-800/50 shadow-inner">
           {{ question()?.problem }}
         </div>
         
@@ -137,7 +137,7 @@
             [ngModel]="userCode()" 
             (ngModelChange)="userCode.set($event)"
             [placeholder]="question()?.type === 'code' ? '// Write your expert solution here...' : 'Compose your answer...'" 
-            class="relative w-full h-80 bg-slate-950/80 rounded-[2rem] p-8 font-mono text-base border border-slate-800 outline-none focus:border-indigo-500/50 transition-all resize-none text-indigo-100/90 leading-relaxed"
+            class="relative w-full h-64 sm:h-80 bg-slate-950/80 rounded-[2rem] p-6 sm:p-8 font-mono text-sm sm:text-base border border-slate-800 outline-none focus:border-indigo-500/50 transition-all resize-none text-indigo-100/90 leading-relaxed"
           ></textarea>
         </div>
 
@@ -180,6 +180,9 @@
                 (mousemove)="draw($event)"
                 (mouseup)="stopDrawing()"
                 (mouseleave)="stopDrawing()"
+                (touchstart)="startDrawing($event); $event.preventDefault()"
+                (touchmove)="draw($event); $event.preventDefault()"
+                (touchend)="stopDrawing()"
                 class="w-full h-auto cursor-crosshair"></canvas>
               <div class="absolute bottom-4 right-4 flex space-x-2">
                 <button (click)="clearCanvas()" class="p-3 bg-slate-900 text-white rounded-full hover:bg-rose-600 transition-colors shadow-xl">
@@ -203,27 +206,27 @@
 
         <button *ngIf="question()?.type !== 'mcq'"
           (click)="checkSolution()" [disabled]="isLoading() || (!userCode() && question()?.type !== 'drawing')" 
-          class="w-full py-5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 disabled:opacity-30 rounded-3xl font-black text-xl tracking-[0.2em] transition-all transform active:scale-[0.98] shadow-2xl shadow-indigo-500/20">
+          class="w-full py-4 sm:py-5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 disabled:opacity-30 rounded-[1.5rem] sm:rounded-3xl font-black text-lg sm:text-xl tracking-[0.2em] transition-all transform active:scale-[0.98] shadow-2xl shadow-indigo-500/20">
           SUBMIT EXPERT REVIEW
         </button>
       </div>
 
       <!-- FEEDBACK AREA -->
-      <div *ngIf="feedback()" class="mt-12 p-10 rounded-[2rem] border transition-all animate-in"
+      <div *ngIf="feedback()" class="mt-12 p-6 sm:p-10 rounded-[2rem] border transition-all animate-in"
            [ngClass]="(feedback()?.status === 'CORRECT' || feedback()?.status === 'MOSTLY_CORRECT') ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/5 border-rose-500/20 text-rose-400'">
         
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
           <div class="flex items-center">
             <div class="p-3 rounded-2xl mr-4" [ngClass]="(feedback()?.status === 'CORRECT' || feedback()?.status === 'MOSTLY_CORRECT') ? 'bg-emerald-500/20' : 'bg-rose-500/20'">
                <span class="text-2xl">{{ (feedback()?.status === 'CORRECT' || feedback()?.status === 'MOSTLY_CORRECT') ? '✓' : '⚠' }}</span>
             </div>
             <div>
               <h3 class="font-black tracking-[0.3em] text-[10px] uppercase opacity-50 mb-1">Expert Consensus</h3>
-              <p class="font-black text-2xl uppercase tracking-tighter">{{ feedback()?.status?.replace('_', ' ') }}</p>
+              <p class="font-black text-xl sm:text-2xl uppercase tracking-tighter">{{ feedback()?.status?.replace('_', ' ') }}</p>
             </div>
           </div>
           
-          <button (click)="showFeedbackInput.set(!showFeedbackInput())" class="text-[8px] font-black tracking-widest uppercase py-2 px-4 border border-white/5 rounded-full hover:bg-white/5 transition-all">
+          <button (click)="showFeedbackInput.set(!showFeedbackInput())" class="w-full sm:w-auto text-[8px] font-black tracking-widest uppercase py-3 px-6 border border-white/5 rounded-full hover:bg-white/5 transition-all">
             {{ showFeedbackInput() ? 'CLOSE ADAPT' : 'ADAPT SYSTEM' }}
           </button>
         </div>

@@ -213,7 +213,7 @@ export class App implements AfterViewInit {
     }
   }
 
-  startDrawing(event: MouseEvent) {
+  startDrawing(event: MouseEvent | TouchEvent) {
     this.isDrawing = true;
     this.draw(event);
   }
@@ -223,17 +223,33 @@ export class App implements AfterViewInit {
     this.ctx?.beginPath();
   }
 
-  draw(event: MouseEvent) {
+  draw(event: MouseEvent | TouchEvent) {
     if (!this.isDrawing || !this.ctx) return;
     const canvas = this.drawingCanvas()?.nativeElement;
+    if (!canvas) return;
+    
     const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
+    let x, y;
 
-    this.ctx.lineTo(x, y);
+    if (event instanceof MouseEvent) {
+      x = event.clientX - rect.left;
+      y = event.clientY - rect.top;
+    } else {
+      x = event.touches[0].clientX - rect.left;
+      y = event.touches[0].clientY - rect.top;
+    }
+
+    // Scale coordinates if canvas style differs from internal resolution
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    const finalX = x * scaleX;
+    const finalY = y * scaleY;
+
+    this.ctx.lineTo(finalX, finalY);
     this.ctx.stroke();
     this.ctx.beginPath();
-    this.ctx.moveTo(x, y);
+    this.ctx.moveTo(finalX, finalY);
   }
 
   clearCanvas() {
@@ -254,6 +270,33 @@ export class App implements AfterViewInit {
 
     if (!isTopicClick) this.isTopicDropdownOpen.set(false);
     if (!isDifficultyClick) this.isDifficultyDropdownOpen.set(false);
+  }
+
+  @HostListener('window:resize')
+  onResize() {
+    this.updatePhysicsBounds();
+  }
+
+  private updatePhysicsBounds() {
+    const el = this.scene()?.nativeElement;
+    if (!el || !this.render || !this.engine) return;
+
+    const width = el.clientWidth;
+    const height = el.clientHeight || 400;
+
+    this.render.options.width = width;
+    this.render.options.height = height;
+    this.render.canvas.width = width;
+    this.render.canvas.height = height;
+
+    // Remove old ground and add new one
+    const bodies = Matter.Composite.allBodies(this.engine.world);
+    const ground = bodies.find(b => b.isStatic);
+    if (ground) {
+       Matter.World.remove(this.engine.world, ground);
+    }
+    const newGround = Matter.Bodies.rectangle(width / 2, height + 10, width, 20, { isStatic: true });
+    Matter.World.add(this.engine.world, [newGround]);
   }
 
   setDifficulty(level: string) {
