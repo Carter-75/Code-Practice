@@ -731,18 +731,20 @@ export class App implements OnInit {{
     (backend_root / "routes" / "index.js").write_text(be_routes_index, encoding='utf-8')
     (backend_root / "models").mkdir()
     
-    if fe_hosting == "vercel":
-        fe_vercel_json = {
-            "cleanUrls": true,
-            "trailingSlash": false,
+    if fe_hosting == "vercel" or be_hosting == "vercel":
+        root_vercel_json = {
+            "version": 2,
+            "cleanUrls": True,
+            "trailingSlash": False,
+            "functions": {
+                "backend/app.js": {
+                    "runtime": "@vercel/node"
+                }
+            },
             "rewrites": [
-                { "source": "/api/:path*", "destination": "https://YOUR-BACKEND-URL.vercel.app/api/:path*" },
-                { "source": "/(.*)", "destination": "/index.html" }
-            ]
-        }
-        (frontend_root / "vercel.json").write_text(json.dumps(fe_vercel_json, indent=2), encoding='utf-8')
-
-        vercel_config = {
+                { "source": "/api/:path*", "destination": "/backend/app.js" },
+                { "source": "/(.*)", "destination": "/frontend/index.html" }
+            ],
             "headers": [
                 {
                     "source": "/(.*)",
@@ -756,7 +758,7 @@ export class App implements OnInit {{
                 }
             ]
         }
-        (backend_root / "vercel.json").write_text(json.dumps(vercel_config, indent=2), encoding='utf-8')
+        (project_root / "vercel.json").write_text(json.dumps(root_vercel_json, indent=2), encoding='utf-8')
 
     # --- Write Frontend ---
     (frontend_root / "package.json").write_text(json.dumps(fe_package_json, indent=2), encoding='utf-8')

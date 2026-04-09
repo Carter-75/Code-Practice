@@ -2,32 +2,62 @@ const path = require('path');
 const fs = require('fs').promises;
 const openaiService = require('../services/openai');
 
-// Robust Path Resolution for Vercel & Local
+// Robust Path Resolution for Vercel & Local Monorepos
 const getSafePath = (relativePath) => {
   const base = process.cwd();
-  // Vercel only allows writing to /tmp
+  
+  // 1. Vercel Write Path Redirect
   if (process.env.VERCEL && (relativePath.includes('extracted_patterns') || relativePath.includes('evolution_rules'))) {
     return path.join('/tmp', path.basename(relativePath));
   }
-  return path.join(base, relativePath);
+
+  // 2. Try Absolute from CWD (Standard)
+  const primaryPath = path.join(base, relativePath);
+  
+  // 3. Try Monorepo Subfolder mapping (If CWD is the Repo Root)
+  if (!relativePath.startsWith('backend/')) {
+    const backupPath = path.join(base, 'backend', relativePath);
+    // Note: We'll decide which one to use at runtime via a probe in getContext
+    return { primaryPath, backupPath };
+  }
+  
+  return { primaryPath };
 };
 
-const CONTEXT_PATH = getSafePath('prompts/context.json');
-const EVOLUTION_PATH = getSafePath('prompts/evolution_rules.json');
-const EXTR_PATH = getSafePath('prompts/extracted_patterns.json');
+const PATHS = {
+  context: getSafePath('prompts/context.json'),
+  evolution: getSafePath('prompts/evolution_rules.json'),
+  extracted: getSafePath('prompts/extracted_patterns.json')
+};
+
+async function readFileSafe(paths) {
+  try {
+    return await fs.readFile(paths.primaryPath, 'utf-8');
+  } catch (e) {
+    if (paths.backupPath) {
+      try {
+        return await fs.readFile(paths.backupPath, 'utf-8');
+      } catch (e2) {
+        throw new Error(`File not found at ${paths.primaryPath} OR ${paths.backupPath}`);
+      }
+    }
+    throw new Error(`File not found at ${paths.primaryPath}`);
+  }
+}
 
 async function getContext() {
-  const data = await fs.readFile(CONTEXT_PATH, 'utf-8');
+  const data = await readFileSafe(PATHS.context);
   return JSON.parse(data);
 }
 
 async function saveContext(context) {
-  await fs.writeFile(CONTEXT_PATH, JSON.stringify(context, null, 2));
+  const savePath = PATHS.context.primaryPath;
+  await fs.writeFile(savePath, JSON.stringify(context, null, 2));
 }
 
 async function getEvolutionRules() {
   try {
-    const data = await fs.readFile(EVOLUTION_PATH, 'utf-8');
+    const data = await readFileSafe(PATHS.evolution);
     return JSON.parse(data);
   } catch (e) {
     return { rules: [] };
@@ -35,12 +65,13 @@ async function getEvolutionRules() {
 }
 
 async function saveEvolutionRules(rules) {
-  await fs.writeFile(EVOLUTION_PATH, JSON.stringify(rules, null, 2));
+  const savePath = PATHS.evolution.primaryPath;
+  await fs.writeFile(savePath, JSON.stringify(rules, null, 2));
 }
 
 async function getPrompt(filename) {
-  const filePath = getSafePath(path.join('prompts', filename));
-  return await fs.readFile(filePath, 'utf-8');
+  const paths = getSafePath(path.join('prompts', filename));
+  return await readFileSafe(paths);
 }
 
 // Utility to check for API key
@@ -195,11 +226,10 @@ exports.evaluateSolution = async (req, res) => {
       }
     }
 
-    // Persistence: Save the session data for later AI-assisted merging
-    try {
+      const savePath = PATHS.extracted.primaryPath;
       let currentData = { extracted_lessons: [] };
       try {
-        const fileContent = await fs.readFile(EXTR_PATH, 'utf-8');
+        const fileContent = await readFileSafe(PATHS.extracted);
         currentData = JSON.parse(fileContent);
       } catch (e) { /* ignore if file doesn't exist yet */ }
 
@@ -213,7 +243,7 @@ exports.evaluateSolution = async (req, res) => {
         modality: type,
         feedback: result
       });
-      await fs.writeFile(EXTR_PATH, JSON.stringify(currentData, null, 2));
+      await fs.writeFile(savePath, JSON.stringify(currentData, null, 2));
     } catch (saveError) {
       console.error('Session Persistence Failed:', saveError);
     }
@@ -234,13 +264,22 @@ exports.submitFeedback = async (req, res) => {
   const { feedback } = req.body;
 
   try {
-    const PROMPTS_DIR = getSafePath('prompts');
-    const files = await fs.readdir(PROMPTS_DIR);
+    const paths = getSafePath('prompts');
+    // For readdir, we'll try primary first
+    let dirToRead = paths.primaryPath;
+    try {
+      await fs.access(dirToRead);
+    } catch (e) {
+      dirToRead = paths.backupPath;
+    }
+
+    const files = await fs.readdir(dirToRead);
 
     // Read all txt and json files for holistic context as requested
     const allContextData = await Promise.all(
       files.filter(f => f.endsWith('.txt') || f.endsWith('.json')).map(async f => {
-        const content = await fs.readFile(path.join(PROMPTS_DIR, f), 'utf-8');
+        const fullPaths = getSafePath(path.join('prompts', f));
+        const content = await readFileSafe(fullPaths);
         return `FILE: ${f}\nCONTENT:\n${content}\n---`;
       })
     );

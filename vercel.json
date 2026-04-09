@@ -11,6 +11,12 @@
       "destination": "/frontend/index.html"
     }
   ],
+  "functions": {
+    "backend/app.js": {
+      "runtime": "@vercel/node",
+      "includeFiles": "backend/prompts/**"
+    }
+  },
   "experimentalServices": {
     "frontend": {
       "entrypoint": "frontend",
@@ -19,7 +25,7 @@
     },
     "backend": {
       "entrypoint": "backend",
-      "routePrefix": "/_/backend"
+      "routePrefix": "/api"
     }
   }
 }
