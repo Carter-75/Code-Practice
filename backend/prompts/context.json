@@ -301,6 +301,65 @@
         }
       ]
     },
+    "angular": {
+      "metadata": { "name": "Angular Architecture", "color": "#DD0031" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Standalone Sovereignty",
+          "problem": "Explain the architectural logic behind moving from NgModules to Standalone Components. Why is this preferred for modern tree-shaking?",
+          "snippet": "@Component({ standalone: true, ... })",
+          "rationale": "Standalone components remove the logical overhead of shared modules, allowing the compiler to perform more aggressive dead-code elimination (tree-shaking) at the component level."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Template Reference Logic",
+          "problem": "Describe the scope and logic of a Template Reference Variable (#var). How does it allow for localized UI logic without a backing TypeScript reference?",
+          "snippet": "<input #myInput> <button (click)=\"do(myInput.value)\">",
+          "rationale": "Template variables provide an expert way to 'wire up' UI logic entirely within the template, reducing component-class bloat for purely local interactions."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Pure Pipe Memoization",
+          "problem": "What is the logical benefit of a 'Pure' pipe? Why does it only execute when the input reference changes?",
+          "snippet": "@Pipe({ name: 'calc', pure: true })",
+          "rationale": "Pure pipes leverage expert-level memoization; if inputs don't change by reference, Angular skips the transform logic entirely, drastically improving re-render performance."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Signals vs RxJS Logic",
+          "problem": "Analyze the state-management logic: When should you choose a Signal (Synchronous State) over an Observable (Asynchronous Stream)?",
+          "snippet": "val = signal(0); stream$ = new Observable();",
+          "rationale": "Signals are the expert choice for local, synchronous UI state that needs fine-grained reactivity, while RxJS remains the standard for complex, asynchronous data events and transformations."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Provider Hierarchy Logic",
+          "problem": "What is the logical difference between providing a service in 'root' versus at the Component level in the 'providers' array?",
+          "snippet": "@Component({ providers: [DataService] })",
+          "rationale": "Component-level providers create a specific 'Expert Instance' tied to that component's lifecycle and its children, whereas 'root' providers are singletons across the entire app."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Reactive Form Synchronization",
+          "problem": "Explain the logic of Reactive Forms vs Template-Driven. Why is the explicit 'FormGroup' model preferred for complex validation logic?",
+          "snippet": "fg = new FormGroup({ name: new FormControl('') });",
+          "rationale": "Reactive forms provide an expert, immutable model of the form state, making unit testing and complex cross-field validation logic significantly more predictable."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "OnPush Change Detection",
+          "problem": "Analyze the OnPush strategy logic. How does it change the way Angular traverses the component tree during a change detection cycle?",
+          "snippet": "changeDetection: ChangeDetectionStrategy.OnPush",
+          "rationale": "OnPush directs Angular to skip the component and its entire subtree unless a specific input reference changes, representing the expert standard for high-performance UI optimization."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Manual Zone Escape",
+          "problem": "What is the architectural rationale for running code using 'runOutsideAngular'? In what logic-heavy scenario would you bypass Zone.js?",
+          "snippet": "this.zone.runOutsideAngular(() => { ... })",
+          "rationale": "Bypassing Zone.js is an expert requirement for high-frequency events (like scroll or mousemove) to prevent unnecessary, global change-detection cycles that would degrade UX."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Multi-Provider Extensibility",
+          "problem": "Explain the logic of 'multi: true' in providers. How does this allow a framework to aggregate multiple configuration objects into a single injection?",
+          "snippet": "{ provide: HTTP_INTERCEPTORS, useClass: MyInt, multi: true }",
+          "rationale": "Multi-providers enable an expert 'Pluggable Architecture' where different features can register their own logic into a central service without knowing about each other."
+        }
+      ]
+    },
     "c_systems": {
       "metadata": { "name": "C Programming", "color": "#A8B9CC" },
       "topics": [

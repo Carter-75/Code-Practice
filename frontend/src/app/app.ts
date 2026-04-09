@@ -19,7 +19,7 @@ export class App implements AfterViewInit {
   // Core State Signals
   title = signal('AI PRACTICE TRAINER V2');
   difficulty = signal(localStorage.getItem('appDifficulty') || 'medium');
-  selectedLanguages = signal<string[]>(JSON.parse(localStorage.getItem('selectedTopics') || '["javascript", "python", "java", "sql", "mongoose", "mongo_db", "authentication"]'));
+  selectedLanguages = signal<string[]>(JSON.parse(localStorage.getItem('selectedTopics') || '["javascript", "python", "java", "sql", "mongoose", "mongo_db", "angular", "authentication"]'));
   allLanguages = signal<string[]>([]);
   question = signal<QuestionResult | null>(null);
   userCode = signal('');
