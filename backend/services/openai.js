@@ -1,12 +1,19 @@
 const { OpenAI } = require('openai');
-require('dotenv').config({ path: require('path').join(process.cwd(), '.env') });
-if (!process.env.OPENAI_API_KEY) {
-  require('dotenv').config({ path: require('path').join(process.cwd(), 'backend', '.env') });
-}
 
-const openai = new OpenAI({
-  apiKey: (process.env.OPENAI_API_KEY || '').trim(),
-});
+function getOpenAIClient() {
+  require('dotenv').config({ path: require('path').join(process.cwd(), '.env') });
+  if (!process.env.OPENAI_API_KEY) {
+    require('dotenv').config({ path: require('path').join(process.cwd(), 'backend', '.env') });
+  }
+  
+  if (!process.env.OPENAI_API_KEY) {
+    console.error('CRITICAL: OPENAI_API_KEY is not defined in the environment.');
+  }
+
+  return new OpenAI({
+    apiKey: (process.env.OPENAI_API_KEY || '').trim(),
+  });
+}
 
 /**
  * Sends a prompt to OpenAI and returns the response content.
@@ -23,7 +30,8 @@ async function getChatCompletion(prompt, imageUrl = null) {
       });
     }
 
-    const response = await openai.chat.completions.create({
+    const client = getOpenAIClient();
+    const response = await client.chat.completions.create({
       model: "gpt-4o",
       messages: [{ role: "user", content: content }],
       temperature: 0.7,
@@ -40,7 +48,8 @@ async function getChatCompletion(prompt, imageUrl = null) {
  */
 async function generateImage(prompt) {
   try {
-    const response = await openai.images.generate({
+    const client = getOpenAIClient();
+    const response = await client.images.generate({
       model: "dall-e-3",
       prompt: prompt,
       n: 1,
