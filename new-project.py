@@ -666,6 +666,7 @@ export class App {{
             "cleanUrls": true,
             "trailingSlash": false,
             "rewrites": [
+                { "source": "/api/:path*", "destination": "https://YOUR-BACKEND-URL.vercel.app/api/:path*" },
                 { "source": "/(.*)", "destination": "/index.html" }
             ]
         }
@@ -735,6 +736,7 @@ FRONTEND_PORT={fe_port}
 MONGODB_URI=mongodb://localhost:27017/{project_name}
 
 # --- Front-End Production (Copy to Vercel Frontend Project) ---
+# NOTE: Run 'vercel link' once in this directory to enable the Automated Vault Sync!
 PRODUCTION=false
 PROD_FRONTEND_URL=
 
@@ -846,18 +848,8 @@ def sync_vercel_env():
     print(\"🚀 Vercel Watcher: Syncing local .env to Production Vault...\")
     
     try:
-        # Check if project is linked
-        check_linked = subprocess.run(
-            [\"vercel\", \"link\", \"--yes\"], 
-            capture_output=True, 
-            text=True, 
-            shell=True
-        )
-        
-        if check_linked.returncode != 0:
-            print(\"?? Warning: Project not correctly linked to Vercel. Skipping sync.\")
-            return
-
+        # We assume the project is linked (via 'vercel link' or similar)
+        # The 'env add' command will handle link errors if they occur
         with open(env_path, \"r\", encoding='utf-8') as f:
             for line in f:
                 line = line.strip()
