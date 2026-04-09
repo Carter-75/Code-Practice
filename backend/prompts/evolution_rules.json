@@ -4,6 +4,16 @@
       "timestamp": "2026-04-09T10:50:00.000Z",
       "feedback_received": "The grading is too strict on minor syntax errors. Missing brackets and incorrect capitalization of class names should be marked as MOSTLY_CORRECT rather than PARTIAL if the core logic is present.",
       "evolution_rule": "Be extremely lenient on syntax issues in code submissions. Missing or mismatched brackets (such as for function bodies or try/catch blocks) and minor capitalization errors (e.g., using 'user' instead of 'User' for instantiation) should NOT be penalized as logical errors. Grade submissions with these issues as MOSTLY_CORRECT, not PARTIAL, as long as the core logic/flow is present."
+    },
+    {
+      "timestamp": "2026-04-09T15:28:00.000Z",
+      "feedback_received": "Grade submissions with missing dots (req session), incorrect casing (App.Delete), and syntax errors in callback functions as MOSTLY_CORRECT if the logic (endpoint, method, session destruction) is correct.",
+      "evolution_rule": "Treat missing property access dots (e.g., 'req session' instead of 'req.session'), incorrect casing of global or local objects (e.g., 'App.Delete' instead of 'app.delete'), and minor malformations in function declarations (e.g., missing arrow operator '=>' in callbacks) as SYNTAX ERRORS, not logical errors. These MUST be graded as MOSTLY_CORRECT if the underlying logic—specifically the correct HTTP method, endpoint path, and functional steps like destroying a session or clearing a cookie—are present and correct."
+    },
+    {
+       "timestamp": "2026-04-09T18:00:00.000Z",
+       "feedback_received": "A logout route with multiple syntax errors (App. Delete, missing arrows, req session) was marked PARTIAL but should be MOSTLY_CORRECT.",
+       "evolution_rule": "MASTER RULE: Prioritize Technical Intent. If a student demonstrates the correct architectural solution (e.g., destroys a session and clears cookies for logout), grade as MOSTLY_CORRECT even if the syntax is completely broken (capitalization, spaces in methods, missing delimiters). PARTIAL must be reserved for logical failure, not syntactic failure."
     }
   ]
 }
