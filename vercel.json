@@ -16,16 +16,5 @@
       "runtime": "@vercel/node",
       "includeFiles": "backend/prompts/**"
     }
-  },
-  "experimentalServices": {
-    "frontend": {
-      "entrypoint": "frontend",
-      "routePrefix": "/",
-      "framework": "angular"
-    },
-    "backend": {
-      "entrypoint": "backend",
-      "routePrefix": "/api"
-    }
   }
 }

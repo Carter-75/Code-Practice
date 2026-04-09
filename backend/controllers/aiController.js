@@ -38,10 +38,10 @@ async function readFileSafe(paths) {
       try {
         return await fs.readFile(paths.backupPath, 'utf-8');
       } catch (e2) {
-        throw new Error(`File not found at ${paths.primaryPath} OR ${paths.backupPath}`);
+        throw new Error(`CRITICAL: Knowledge Base Missing. Checked Primary: [${paths.primaryPath}] AND Backup: [${paths.backupPath}]. Root was: ${process.cwd()}`);
       }
     }
-    throw new Error(`File not found at ${paths.primaryPath}`);
+    throw new Error(`CRITICAL: Knowledge Base Missing. Checked: [${paths.primaryPath}]. Root was: ${process.cwd()}`);
   }
 }
 

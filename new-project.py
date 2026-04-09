@@ -733,30 +733,18 @@ export class App implements OnInit {{
     
     if fe_hosting == "vercel" or be_hosting == "vercel":
         root_vercel_json = {
-            "version": 2,
             "cleanUrls": True,
             "trailingSlash": False,
-            "functions": {
-                "backend/app.js": {
-                    "runtime": "@vercel/node"
-                }
-            },
             "rewrites": [
                 { "source": "/api/:path*", "destination": "/backend/app.js" },
                 { "source": "/(.*)", "destination": "/frontend/index.html" }
             ],
-            "headers": [
-                {
-                    "source": "/(.*)",
-                    "headers": [
-                        { "key": "X-Frame-Options", "value": "ALLOWALL" },
-                        { 
-                            "key": "Content-Security-Policy", 
-                            "value": "frame-ancestors 'self' https://carter-portfolio.fyi https://carter-portfolio.vercel.app https://*.vercel.app http://localhost:3000" 
-                        }
-                    ]
+            "functions": {
+                "backend/app.js": {
+                    "runtime": "@vercel/node",
+                    "includeFiles": "backend/prompts/**"
                 }
-            ]
+            }
         }
         (project_root / "vercel.json").write_text(json.dumps(root_vercel_json, indent=2), encoding='utf-8')
 

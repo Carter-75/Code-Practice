@@ -63,6 +63,40 @@ app.use((req, res, next) => {
   next();
 });
 
+// --- Diagnostic Routes (Hardening) ---
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'online',
+    cwd: process.cwd(),
+    dirname: __dirname,
+    env: process.env.PRODUCTION === 'true' ? 'production' : 'development',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/api/debug-bundle', async (req, res) => {
+  const fs = require('fs').promises;
+  async function listFiles(dir) {
+    let results = [];
+    const list = await fs.readdir(dir, { withFileTypes: true });
+    for (const file of list) {
+      const res = path.resolve(dir, file.name);
+      if (file.isDirectory()) {
+        results.push({ name: file.name, type: 'dir', children: await listFiles(res) });
+      } else {
+        results.push({ name: file.name, type: 'file' });
+      }
+    }
+    return results;
+  }
+  try {
+    const root = await listFiles(process.cwd());
+    res.json({ root });
+  } catch (err) {
+    res.status(500).json({ error: err.message, stack: err.stack });
+  }
+});
+
 app.get('/', (req, res) => {
   res.send(`API for ${PROJECT_NAME} is running at /api`);
 });
