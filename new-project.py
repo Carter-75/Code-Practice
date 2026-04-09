@@ -756,8 +756,7 @@ export class App implements OnInit {{
             "version": 2,
             "functions": {
                 "app.js": {
-                    "runtime": "@vercel/node",
-                    "includeFiles": "prompts/**"
+                    "runtime": "@vercel/node"
                 }
             },
             "rewrites": [
