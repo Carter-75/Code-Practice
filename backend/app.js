@@ -42,8 +42,11 @@ const isProd = process.env.PRODUCTION === 'true';
 const prodUrl = process.env.PROD_FRONTEND_URL;
 
 const frameAncestors = ["'self'", "https://carter-portfolio.fyi", "https://carter-portfolio.vercel.app", "https://*.vercel.app", `http://localhost:${process.env.PORT || '3000'}`];
-if (isProd && prodUrl) {
+if (prodUrl) {
   frameAncestors.push(prodUrl);
+}
+if (process.env.PROD_BACKEND_URL) {
+  frameAncestors.push(process.env.PROD_BACKEND_URL);
 }
 
 app.use(helmet({

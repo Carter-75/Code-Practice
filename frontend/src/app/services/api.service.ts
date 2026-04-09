@@ -37,16 +37,23 @@ export class ApiService {
   private get apiUrl(): string {
     // Environmental "Burn-In" Toggles
     const isProd = ('__PRODUCTION__' as string) === 'true';
+    const prodBackendUrl = ('__PROD_BACKEND_URL__' as string);
     
     const host = window.location.hostname;
     const isLocal = host === 'localhost' || host === '127.0.0.1';
     
-    // In local development, use the direct local backend port
+    // 1. If we are local and not forced into production mode, hit the raw local port
     if (isLocal && !isProd) {
       return 'http://localhost:3000/api';
     }
 
-    // In production, use the universal relative path (handled by Vercel Proxy)
+    // 2. If we are in production (or forced), prioritize the explicit backend URL from env
+    if (prodBackendUrl && prodBackendUrl !== '' && !prodBackendUrl.includes('__PROD_')) {
+      // Ensure no trailing slash for consistent endpoint joining
+      return prodBackendUrl.endsWith('/') ? prodBackendUrl.slice(0, -1) + '/api' : prodBackendUrl + '/api';
+    }
+
+    // 3. Fallback: Use the universal relative path (handled by local Vercel Proxy)
     return '/api';
   }
 

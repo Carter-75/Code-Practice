@@ -181,9 +181,12 @@ const isProd = process.env.PRODUCTION === 'true';
 const prodUrl = process.env.PROD_FRONTEND_URL;
 
 const frameAncestors = ["'self'", "https://carter-portfolio.fyi", "https://carter-portfolio.vercel.app", "https://*.vercel.app", `http://localhost:${process.env.PORT || '{be_port}'}`];
-if (isProd && prodUrl) {
+if (prodUrl) {{
   frameAncestors.push(prodUrl);
-}
+}}
+if (process.env.PROD_BACKEND_URL) {{
+  frameAncestors.push(process.env.PROD_BACKEND_URL);
+}}
 
 app.use(helmet({
   contentSecurityPolicy: {
@@ -418,12 +421,17 @@ export class ApiService {{
     const host = window.location.hostname;
     const isLocal = host === 'localhost' || host === '127.0.0.1';
     
-    // In local development (and if not explicitly forced to prod), use local server
+    // 1. If we are local and not forced into production mode, hit the raw local port
     if (isLocal && !isProd) {{
       return 'http://localhost:{be_port}/api';
     }}
 
-    // In production, use the relative path (handled by Vercel Proxy)
+    // 2. If we are in production (or forced), prioritize the explicit backend URL from env
+    if (prodBackend && prodBackend !== '' && !prodBackend.includes('__PROD_')) {{
+      return prodBackend.endsWith('/') ? prodBackend.slice(0, -1) + '/api' : prodBackend + '/api';
+    }}
+
+    // 3. Fallback: Use the universal relative path (handled by Vercel Proxy)
     return '/api';
   }}
 
@@ -804,6 +812,7 @@ PRODUCTION=false
 # --- Back-End Production ---
 # ONCE DEPLOYED: Update your vercel.json 'destination' to match this URL!
 PROD_BACKEND_URL=
+PROD_FRONTEND_URL=
 """
     (project_root / ".env").write_text(env_content, encoding='utf-8')
 
