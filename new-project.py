@@ -298,7 +298,7 @@ module.exports = router;
                     "build": {
                         "builder": "@angular/build:application",
                         "options": {
-                            "outputPath": "dist/frontend/browser",
+                            "outputPath": "dist/frontend",
                             "index": "src/index.html",
                             "browser": "src/main.ts",
                             "tsConfig": "tsconfig.app.json",
