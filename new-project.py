@@ -141,10 +141,15 @@ def main():
         }
     }
 
-    be_app_js = """require('dotenv').config({ path: require('path').join(process.cwd(), '.env') });
-if (!process.env.PROJECT_NAME) {
-  require('dotenv').config({ path: require('path').join(process.cwd(), 'backend', '.env') });
-}
+    be_app_js = """// Explicit Environment Resolution
+const path = require('path');
+const fs = require('fs');
+const resolveEnvPath = () => {
+  const candidates = [path.join(process.cwd(), '.env'), path.join(process.cwd(), 'backend', '.env')];
+  for (const c of candidates) { if (fs.existsSync(c)) return c; }
+  return candidates[0];
+};
+require('dotenv').config({ path: resolveEnvPath() });
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');

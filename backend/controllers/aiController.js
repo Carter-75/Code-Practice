@@ -3,52 +3,44 @@ const fs = require('fs').promises;
 const openaiService = require('../services/openai');
 
 // Robust Path Resolution for Vercel & Local Monorepos
+// Explicit Path Resolver: Finds the ONE true path for the current environment
 const getSafePath = (relativePath) => {
   const base = process.cwd();
-  
-  // 1. Vercel Write Path Redirect
   const isVercel = process.env.VERCEL === '1' || process.env.PRODUCTION === 'true';
-  const isWritableFile = relativePath.includes('extracted_patterns') || relativePath.includes('evolution_rules');
+  const isWritable = relativePath.includes('extracted_patterns') || relativePath.includes('evolution_rules');
   
-  if (isVercel && isWritableFile) {
-    return { primaryPath: path.join('/tmp', path.basename(relativePath)) };
+  // 1. Production Writable Redirect
+  if (isVercel && isWritable) {
+    return path.join('/tmp', path.basename(relativePath));
   }
 
-  // 2. Build the Quaternary Check Object
-  const primaryPath = path.join(base, relativePath);
-  const backupPath = path.join(base, 'backend', relativePath);
-  const tertiaryPath = path.join(__dirname, '..', relativePath);
-  const quaternaryPath = path.resolve(relativePath); // Resolve from the app's entrypoint
-  
-  return { primaryPath, backupPath, tertiaryPath, quaternaryPath };
+  // 2. Probing all candidates to find the Single Truth
+  const candidates = [
+    path.join(base, relativePath),
+    path.join(base, 'backend', relativePath),
+    path.join(__dirname, '..', relativePath),
+    path.resolve(relativePath)
+  ];
+
+  for (const candidate of candidates) {
+    // We use a sync check here only for the initial resolution to ensure we have the winning path
+    try {
+      const fsSync = require('fs');
+      if (fsSync.existsSync(candidate)) return candidate;
+    } catch (e) { /* continue */ }
+  }
+
+  // Fallback to primary if nothing found (will throw explicit error on read)
+  return candidates[0];
 };
 
-async function readFileSafe(paths) {
-  if (!paths.backupPath) {
-    try {
-      return await fs.readFile(paths.primaryPath, 'utf-8');
-    } catch (e) {
-      if (paths.primaryPath.startsWith('/tmp')) return null;
-      throw e;
-    }
-  }
-
+async function readFileSafe(targetPath) {
+  // Direct read, no fallback logic
   try {
-    return await fs.readFile(paths.primaryPath, 'utf-8');
+    return await fs.readFile(targetPath, 'utf-8');
   } catch (e) {
-    try {
-      return await fs.readFile(paths.backupPath, 'utf-8');
-    } catch (e2) {
-      try {
-        return await fs.readFile(paths.tertiaryPath, 'utf-8');
-      } catch (e3) {
-        try {
-          return await fs.readFile(paths.quaternaryPath, 'utf-8');
-        } catch (e4) {
-          throw new Error(`FATAL: File Not Found. Checked [${paths.primaryPath}], [${paths.backupPath}], [${paths.tertiaryPath}], [${paths.quaternaryPath}]. Root: ${process.cwd()}`);
-        }
-      }
-    }
+    if (targetPath.startsWith('/tmp')) return null;
+    throw new Error(`FATAL: Resource Missing at Resolved Path: [${targetPath}]. Environmental Root: ${process.cwd()}`);
   }
 }
 
@@ -64,8 +56,7 @@ async function getContext() {
 }
 
 async function saveContext(context) {
-  // We prioritize the primary path (which could be /tmp in prod)
-  await fs.writeFile(PATHS.context.primaryPath, JSON.stringify(context, null, 2));
+  await fs.writeFile(PATHS.context, JSON.stringify(context, null, 2));
 }
 
 async function getEvolutionRules() {
@@ -79,12 +70,12 @@ async function getEvolutionRules() {
 }
 
 async function saveEvolutionRules(rules) {
-  await fs.writeFile(PATHS.evolution.primaryPath, JSON.stringify(rules, null, 2));
+  await fs.writeFile(PATHS.evolution, JSON.stringify(rules, null, 2));
 }
 
 async function getPrompt(filename) {
-  const paths = getSafePath(path.join('prompts', filename));
-  return await readFileSafe(paths);
+  const targetPath = getSafePath(path.join('prompts', filename));
+  return await readFileSafe(targetPath);
 }
 
 // Utility to check for API key
@@ -239,11 +230,11 @@ exports.evaluateSolution = async (req, res) => {
       }
     }
 
-      const savePath = PATHS.extracted.primaryPath;
+      const savePath = PATHS.extracted;
       let currentData = { extracted_lessons: [] };
       try {
         const fileContent = await readFileSafe(PATHS.extracted);
-        currentData = JSON.parse(fileContent);
+        if (fileContent) currentData = JSON.parse(fileContent);
       } catch (e) { /* ignore if file doesn't exist yet */ }
 
       if (!currentData.extracted_lessons) currentData.extracted_lessons = [];
