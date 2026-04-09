@@ -1,7 +1,14 @@
 {
   "version": 2,
+  "builds": [
+    {
+      "src": "app.js",
+      "use": "@vercel/node"
+    }
+  ],
   "functions": {
     "app.js": {
+      "maxDuration": 60,
       "includeFiles": "{services,prompts,models,controllers,routes}/**"
     }
   },

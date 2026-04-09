@@ -273,15 +273,7 @@ exports.submitFeedback = async (req, res) => {
   const { feedback } = req.body;
 
   try {
-    const paths = getSafePath('prompts');
-    // For readdir, we'll try primary first
-    let dirToRead = paths.primaryPath;
-    try {
-      await fs.access(dirToRead);
-    } catch (e) {
-      dirToRead = paths.backupPath;
-    }
-
+    const dirToRead = getSafePath('prompts');
     const files = await fs.readdir(dirToRead);
 
     // Read all txt and json files for holistic context as requested
