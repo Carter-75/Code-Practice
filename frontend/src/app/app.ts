@@ -19,7 +19,7 @@ export class App implements AfterViewInit {
   // Core State Signals
   title = signal('AI PRACTICE TRAINER V2');
   difficulty = signal(localStorage.getItem('appDifficulty') || 'medium');
-  selectedLanguages = signal<string[]>(JSON.parse(localStorage.getItem('selectedTopics') || '["javascript", "python", "java", "sql", "mongoose", "mongo_db", "angular", "authentication"]'));
+  selectedLanguages = signal<string[]>(JSON.parse(localStorage.getItem('selectedTopics') || '["javascript", "python", "java", "sql", "mongoose", "mongo_db", "angular", "auth_security"]'));
   allLanguages = signal<string[]>([]);
   question = signal<QuestionResult | null>(null);
   userCode = signal('');
@@ -74,6 +74,15 @@ export class App implements AfterViewInit {
   loadAvailableLanguages() {
     this.apiService.getData<string[]>('ai/languages').subscribe(langs => {
       this.allLanguages.set(langs);
+      
+      // Clean up orphaned topics from localStorage
+      const currentSelected = this.selectedLanguages();
+      const validSelected = currentSelected.filter(lang => langs.includes(lang));
+      
+      if (currentSelected.length !== validSelected.length) {
+        this.selectedLanguages.set(validSelected);
+        this.onLanguagesChange();
+      }
     });
   }
 
