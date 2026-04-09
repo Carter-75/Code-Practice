@@ -2,9 +2,19 @@ const path = require('path');
 const fs = require('fs').promises;
 const openaiService = require('../services/openai');
 
-// Load the master knowledge base
-const CONTEXT_PATH = path.join(__dirname, '../prompts/context.json');
-const EVOLUTION_PATH = path.join(__dirname, '../prompts/evolution_rules.json');
+// Robust Path Resolution for Vercel & Local
+const getSafePath = (relativePath) => {
+  const base = process.cwd();
+  // Vercel only allows writing to /tmp
+  if (process.env.VERCEL && (relativePath.includes('extracted_patterns') || relativePath.includes('evolution_rules'))) {
+    return path.join('/tmp', path.basename(relativePath));
+  }
+  return path.join(base, relativePath);
+};
+
+const CONTEXT_PATH = getSafePath('prompts/context.json');
+const EVOLUTION_PATH = getSafePath('prompts/evolution_rules.json');
+const EXTR_PATH = getSafePath('prompts/extracted_patterns.json');
 
 async function getContext() {
   const data = await fs.readFile(CONTEXT_PATH, 'utf-8');
@@ -29,7 +39,7 @@ async function saveEvolutionRules(rules) {
 }
 
 async function getPrompt(filename) {
-  const filePath = path.join(__dirname, '../prompts', filename);
+  const filePath = getSafePath(path.join('prompts', filename));
   return await fs.readFile(filePath, 'utf-8');
 }
 
@@ -37,8 +47,8 @@ async function getPrompt(filename) {
 const checkApiKey = (res) => {
   if (!process.env.OPENAI_API_KEY) {
     console.error('ERROR: OPENAI_API_KEY is missing from the Environment Vault!');
-    res.status(500).json({ 
-      error: 'Vault Error: OpenAI API Key is missing from Vercel Environment Variables.' 
+    res.status(500).json({
+      error: 'Vault Error: OpenAI API Key is missing from Vercel Environment Variables.'
     });
     return false;
   }
@@ -53,7 +63,7 @@ exports.generateNewQuestion = async (req, res) => {
   try {
     const context = await getContext();
     const systemInstruction = await getPrompt('questionPrompt.txt');
-    
+
     // Build a flat list of all allowed topics across selected languages
     let pool = [];
     selectedLangs.forEach(lang => {
@@ -65,7 +75,7 @@ exports.generateNewQuestion = async (req, res) => {
         });
       }
     });
-    
+
     if (pool.length === 0) {
       throw new Error(`No ${difficulty} topics found for selected categories: ${selectedLangs.join(', ')}`);
     }
@@ -75,13 +85,13 @@ exports.generateNewQuestion = async (req, res) => {
 
     // Strict Modality Enforcement: Drawing is reserved for specific visual logic domains
     let modalityGuidance = "AVAILABLE MODALITIES: 'code', 'mcq', 'text'.";
-    
+
     if (selectedTopic.domain.toLowerCase() === 'automata') {
-        modalityGuidance = "AVAILABLE MODALITIES: 'drawing', 'code', 'mcq', 'text'. Drawing is allowed for state machines.";
+      modalityGuidance = "AVAILABLE MODALITIES: 'drawing', 'code', 'mcq', 'text'. Drawing is allowed for state machines.";
     } else if (selectedTopic.domain.toLowerCase() === 'c_systems' && selectedTopic.title.toLowerCase().includes('memory')) {
-        modalityGuidance = "AVAILABLE MODALITIES: 'drawing', 'code', 'mcq', 'text'. Drawing is allowed for stack/heap diagrams.";
+      modalityGuidance = "AVAILABLE MODALITIES: 'drawing', 'code', 'mcq', 'text'. Drawing is allowed for stack/heap diagrams.";
     }
-    
+
     // Final reminder on visual aids
     const visualAidInstruction = "REMINDER: DO NOT provide a dallePrompt unless you are providing a mandatory reference diagram for analysis. If the user can answer without seeing a picture, omit the dallePrompt.";
 
@@ -155,7 +165,7 @@ exports.evaluateSolution = async (req, res) => {
       getPrompt('questionPrompt.txt'),
       getEvolutionRules()
     ]);
-    
+
     // Determine if we have a visual submission (drawing)
     const isImage = typeof userCode === 'string' && userCode.startsWith('data:image');
 
@@ -187,22 +197,21 @@ exports.evaluateSolution = async (req, res) => {
 
     // Persistence: Save the session data for later AI-assisted merging
     try {
-      const EXTR_PATH = path.join(__dirname, '../prompts/extracted_patterns.json');
       let currentData = { extracted_lessons: [] };
       try {
         const fileContent = await fs.readFile(EXTR_PATH, 'utf-8');
         currentData = JSON.parse(fileContent);
       } catch (e) { /* ignore if file doesn't exist yet */ }
-      
+
       if (!currentData.extracted_lessons) currentData.extracted_lessons = [];
-      
+
       currentData.extracted_lessons.push({
-         timestamp: new Date().toISOString(),
-         type: 'resolved_session',
-         question: question,
-         user_submission: userCode,
-         modality: type,
-         feedback: result
+        timestamp: new Date().toISOString(),
+        type: 'resolved_session',
+        question: question,
+        user_submission: userCode,
+        modality: type,
+        feedback: result
       });
       await fs.writeFile(EXTR_PATH, JSON.stringify(currentData, null, 2));
     } catch (saveError) {
@@ -225,9 +234,9 @@ exports.submitFeedback = async (req, res) => {
   const { feedback } = req.body;
 
   try {
-    const PROMPTS_DIR = path.join(__dirname, '../prompts');
+    const PROMPTS_DIR = getSafePath('prompts');
     const files = await fs.readdir(PROMPTS_DIR);
-    
+
     // Read all txt and json files for holistic context as requested
     const allContextData = await Promise.all(
       files.filter(f => f.endsWith('.txt') || f.endsWith('.json')).map(async f => {
@@ -270,21 +279,21 @@ exports.submitFeedback = async (req, res) => {
 
     const aiResponse = await openaiService.getChatCompletion(reflectionInstruction);
     const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-    
+
     if (jsonMatch) {
       const result = JSON.parse(jsonMatch[0]);
       const newRule = result.new_rule;
-      
+
       // Update evolution_rules.json instead of context.json
       const evolutionData = await getEvolutionRules();
       if (!evolutionData.rules) evolutionData.rules = [];
-      
+
       evolutionData.rules.push({
         timestamp: new Date().toISOString(),
         feedback_received: feedback,
         evolution_rule: newRule
       });
-      
+
       // Keep last 10 rules
       if (evolutionData.rules.length > 10) evolutionData.rules.shift();
 
@@ -303,12 +312,12 @@ exports.getAvailableLanguages = async (req, res) => {
   try {
     const context = await getContext();
     const sortedLangs = Object.keys(context.curriculum).sort();
-    
+
     // Force 200 response by disabling cache
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
-    
+
     res.json(sortedLangs);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch languages' });

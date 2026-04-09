@@ -19,7 +19,7 @@ const PROJECT_NAME = process.env.PROJECT_NAME || 'Portfolio Project';
 
 // --- MongoDB Setup ---
 const mongoURI = process.env.MONGODB_URI;
-    if (mongoURI) {
+if (mongoURI) {
   mongoose.connect(mongoURI)
     .then(() => console.log('OK: Connected to MongoDB'))
     .catch(err => {

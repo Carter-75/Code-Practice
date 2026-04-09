@@ -12,7 +12,7 @@ const openai = new OpenAI({
 async function getChatCompletion(prompt, imageUrl = null) {
   try {
     const content = [{ type: "text", text: prompt }];
-    
+
     if (imageUrl) {
       content.push({
         type: "image_url",
