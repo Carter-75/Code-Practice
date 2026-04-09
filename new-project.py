@@ -165,11 +165,19 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 // --- Portfolio Iframe Security ---
+const isProd = process.env.PRODUCTION === 'true';
+const prodUrl = process.env.PROD_FRONTEND_URL;
+
+const frameAncestors = ["'self'", "https://carter-portfolio.fyi", "https://carter-portfolio.vercel.app", "https://*.vercel.app", `http://localhost:${process.env.PORT || '{be_port}'}`];
+if (isProd && prodUrl) {
+  frameAncestors.push(prodUrl);
+}
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "frame-ancestors": ["'self'", "https://carter-portfolio.fyi", "https://carter-portfolio.vercel.app", "https://*.vercel.app", "http://localhost:3000"],
+      "frame-ancestors": frameAncestors,
     },
   },
 }));
@@ -653,7 +661,13 @@ export class App {{
     (backend_root / "routes" / "index.js").write_text(be_routes_index, encoding='utf-8')
     (backend_root / "models").mkdir()
     
-    # Vercel Config
+    fe_vercel_json = {
+        "rewrites": [
+            { "source": "/(.*)", "destination": "/index.html" }
+        ]
+    }
+    (frontend_root / "vercel.json").write_text(json.dumps(fe_vercel_json, indent=2), encoding='utf-8')
+
     vercel_config = {
         "headers": [
             {
@@ -716,6 +730,11 @@ export class App {{
 PORT={be_port}
 FRONTEND_PORT={fe_port}
 MONGODB_URI=mongodb://localhost:27017/{project_name}
+
+# Production Settings
+PRODUCTION=false
+PROD_FRONTEND_URL=
+PROD_BACKEND_URL=
 """
     (project_root / ".env").write_text(env_content, encoding='utf-8')
 

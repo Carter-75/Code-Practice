@@ -31,7 +31,30 @@ export interface QuestionResult {
 })
 export class AiService {
   private http = inject(HttpClient);
-  private apiUrl = 'http://localhost:3000/api/ai';
+  
+  // Dynamic API URL mapping
+  private get apiUrl(): string {
+    const host = window.location.hostname;
+    const isLocal = host === 'localhost' || host === '127.0.0.1';
+    
+    // Fallback logic: 
+    // If we are on localhost, always use the local backend.
+    if (isLocal) {
+      return 'http://localhost:3000/api/ai';
+    }
+
+    // --- Production Configuration ---
+    // If you have a deployed backend, put the URL here.
+    // If this is blank, it will fallback to a relative path '/api/ai'
+    const PROD_BACKEND_URL = ''; 
+    
+    if (PROD_BACKEND_URL) {
+      return `${PROD_BACKEND_URL}/api/ai`;
+    }
+
+    // Default: relative path (assumes frontend and backend are on same domain/proxy)
+    return '/api/ai';
+  }
 
   getQuestion(difficulty: string = 'medium', languages: string[] = []): Observable<QuestionResult> {
     const langParam = languages.length > 0 ? `&languages=${languages.join(',')}` : '';

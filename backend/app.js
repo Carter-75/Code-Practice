@@ -38,11 +38,19 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 // --- Portfolio Iframe Security ---
+const isProd = process.env.PRODUCTION === 'true';
+const prodUrl = process.env.PROD_FRONTEND_URL;
+
+const frameAncestors = ["'self'", "https://carter-portfolio.fyi", "https://carter-portfolio.vercel.app", "https://*.vercel.app", `http://localhost:${process.env.PORT || '3000'}`];
+if (isProd && prodUrl) {
+  frameAncestors.push(prodUrl);
+}
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       ...helmet.contentSecurityPolicy.getDefaultDirectives(),
-      "frame-ancestors": ["'self'", "https://carter-portfolio.fyi", "https://carter-portfolio.vercel.app", "https://*.vercel.app", "http://localhost:3000"],
+      "frame-ancestors": frameAncestors,
     },
   },
 }));
