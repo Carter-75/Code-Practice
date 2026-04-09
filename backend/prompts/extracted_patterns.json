@@ -1,0 +1,187 @@
+{
+  "extracted_lessons": [
+    {
+      "image_source": "20260126_103025.jpg",
+      "data": {
+        "language": "technology",
+        "topic": {
+          "title": "Choosing the Right IDE/Software Tools for Various Programming Languages",
+          "difficulty": "Easy",
+          "patterns": [
+            "Java - Eclipse or jGRASP",
+            "Scheme - DrRacket",
+            "Haskell - Replit or VS Code",
+            "Prolog - SWI Prolog",
+            "C++ - VS Code"
+          ]
+        },
+        "logic_reasoning": "The logic behind this pattern is the selection of appropriate Integrated Development Environments (IDEs) and tools based on the programming language. This is considered an 'Expert Pattern' because choosing the right tool is essential for efficient coding and debugging, directly impacting productivity and ease of development."
+      }
+    },
+    {
+      "image_source": "20260202_153048.jpg",
+      "data": {
+        "language": "c",
+        "topic": {
+          "title": "Linked List Node Insertion with Dynamic Memory Allocation",
+          "difficulty": "Medium",
+          "patterns": [
+            "void insert(int x, int y)",
+            "pair_t *pair = malloc(sizeof(pair_t));",
+            "node_t *node = malloc(sizeof(node_t));",
+            "pair->val1 = x; pair->val2 = y;",
+            "node->data = pair;",
+            "node->next = head;"
+          ]
+        },
+        "logic_reasoning": "This logic is an 'Expert Pattern' because it demonstrates dynamic memory allocation, a crucial aspect of C programming, especially in building data structures like linked lists. Proper memory management and understanding pointers are considered advanced skills, often required for efficient low-level programming."
+      }
+    },
+    {
+      "image_source": "20260202_155705.jpg",
+      "data": {
+        "language": "finite state automaton",
+        "topic": {
+          "title": "Handling Error States in Finite State Automata",
+          "difficulty": "Medium",
+          "patterns": [
+            "Most FSAs include an additional error state se",
+            "Omitted transitions go to se"
+          ]
+        },
+        "logic_reasoning": "The inclusion of an error state (se) in a Finite State Automaton addresses non-explicit transitions, providing a robust way to handle unexpected inputs. This pattern strategically manages errors, not usually shown, ensuring the FSA's completeness and reliability."
+      }
+    },
+    {
+      "image_source": "20260202_161207.jpg",
+      "data": {
+        "language": "finite state automaton",
+        "topic": {
+          "title": "Designing a Deterministic Finite Automaton for String Acceptance",
+          "difficulty": "Medium",
+          "patterns": [
+            "state transitions: n0 -> n2 on 'i', n0 -> n1 on 'k'",
+            "accept states: n0, n4",
+            "input symbols: 'i', 'j', 'k'"
+          ]
+        },
+        "logic_reasoning": "This logic illustrates the design of a deterministic finite automaton (DFA) for accepting or rejecting specific strings based on their transitions between states. The use of accept and reject criteria defines an advanced understanding of state machine operations."
+      }
+    },
+    {
+      "image_source": "20260211_123144.jpg",
+      "data": {
+        "language": "authentication",
+        "topic": {
+          "title": "Configuring SSH Access with Firewall Rules",
+          "difficulty": "Medium",
+          "patterns": [
+            "ssh -i keypath ubuntu<ip>",
+            "chmod 400 keypath"
+          ]
+        },
+        "logic_reasoning": "The image demonstrates setting up SSH access using a key file for authentication, along with security measures such as setting permissions on the key file. It also highlights configuring firewall rules to allow SSH access on port 22, emphasizing secure and controlled access to a server."
+      }
+    },
+    {
+      "image_source": "20260211_124927.jpg",
+      "data": {
+        "language": "javascript",
+        "topic": {
+          "title": "Creating a Task with RESTful API",
+          "difficulty": "Medium",
+          "patterns": [
+            "{ id: \"<string>\", ownerId: \"<string>\", description: \"<string>\", complete: \"<boolean>\" }",
+            "return 200 OK to slide"
+          ]
+        },
+        "logic_reasoning": "This logic involves creating a task with RESTful API principles, including JSON data structure and HTTP methods. The expert pattern focuses on structuring data as a JSON object for API requests, handling responses, and using status codes effectively."
+      }
+    },
+    {
+      "image_source": "20260211_130135.jpg",
+      "data": {
+        "language": "authentication",
+        "topic": {
+          "title": "Understanding API Endpoints",
+          "difficulty": "Medium",
+          "patterns": [
+            "The path semantics",
+            "The meaning of query parameters",
+            "The meaning of headers",
+            "The meaning of the body",
+            "The meaning of potential status codes"
+          ]
+        },
+        "logic_reasoning": "This logic represents an 'Expert Pattern' because understanding API endpoints involves dissecting both request and response elements. This includes analyzing path semantics, headers, and status codes, which are crucial for designing and consuming APIs securely and effectively."
+      }
+    },
+    {
+      "image_source": "20260216_121810.jpg",
+      "data": {
+        "language": "javascript",
+        "topic": {
+          "title": "Dynamic List Creation with Fetch API in JavaScript",
+          "difficulty": "Medium",
+          "patterns": [
+            "document.addEventListener('DOMContentLoaded', loadStudents)",
+            "fetch('/api/v1/students').then(res => res.json())",
+            "students.forEach(s => { let li = document.createElement('li'); li.textContent = `${s.firstName} ${s.lastName}`; ... })"
+          ]
+        },
+        "logic_reasoning": "This logic is an 'Expert Pattern' as it demonstrates asynchronous data fetching with the Fetch API and dynamic DOM manipulation to render data. It involves handling promises and creating structured HTML elements dynamically based on the received data, which are essential skills for modern web development."
+      }
+    },
+    {
+      "image_source": "20260216_153735.jpg",
+      "data": {
+        "language": "automata_theory",
+        "topic": {
+          "title": "Building an Epsilon-NFA from Regular Expressions",
+          "difficulty": "Medium",
+          "patterns": [
+            "Epsilon transitions",
+            "Concatenation of regular expressions",
+            "Union of regular expressions"
+          ]
+        },
+        "logic_reasoning": "This logic is an 'Expert Pattern' because constructing an epsilon-NFA involves complex understanding of automata theory, particularly how different operations on regular expressions translate to state transitions and configurations in an NFA model. It requires knowledge of base cases and recursive combination of regular expressions."
+      }
+    },
+    {
+      "image_source": "20260216_154928.jpg",
+      "data": {
+        "language": "automata_theory",
+        "topic": {
+          "title": "Building ε-NFA from Regular Expressions",
+          "difficulty": "Hard",
+          "patterns": [
+            "R is a single symbol 'a' leading to acceptance",
+            "R is ε leading to acceptance",
+            "R is empty set (ϕ) leading to no transitions",
+            "Construction rules: exactly one start and accept state, no transitions back to start or out of accept"
+          ]
+        },
+        "logic_reasoning": "This logic involves constructing ε-NFAs (epsilon Non-deterministic Finite Automata) from regular expressions. It requires understanding transitions, epsilon moves, and managing start and accept states accurately, making it a complex task in automata theory."
+      }
+    },
+    {
+      "timestamp": "2026-04-09T00:59:23.790Z",
+      "type": "resolved_session",
+      "question": "Create a simple Java class named 'Car' with a 'brand' field and a method 'printBrand()' that prints the brand of the car to the console.",
+      "user_submission": "...",
+      "modality": "code",
+      "feedback": {
+        "status": "INCORRECT",
+        "explanation": "The student did not submit any code or content for evaluation.",
+        "issues": [
+          "No code was provided for evaluation."
+        ],
+        "dallePrompt": "OPTIONAL: A visual representation of a Java class structure with a single field and a method.",
+        "correctSolution": "```java\npublic class Car {\n    private String brand;\n\n    public Car(String brand) {\n        this.brand = brand;\n    }\n\n    public void printBrand() {\n        System.out.println(this.brand);\n    }\n}\n```",
+        "encouragement": "Don't hesitate to give it another try! You can do it!",
+        "visualAidUrl": "https://oaidalleapiprodscus.blob.core.windows.net/private/org-FIsz3Hi3BjoBJaq1YKEc16Uy/user-ysZtffwAL7SvjEz3H65qDS7H/img-9mMPveWuyZp9nVGs79kHLw1P.png?st=2026-04-08T23%3A59%3A25Z&se=2026-04-09T01%3A59%3A25Z&sp=r&sv=2026-02-06&sr=b&rscd=inline&rsct=image/png&skoid=0e2a3d55-e963-40c9-9c89-2a1aa28cb3ac&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-04-08T16%3A24%3A06Z&ske=2026-04-09T16%3A24%3A06Z&sks=b&skv=2026-02-06&sig=%2BKmxTZqY5WZy/O/xZyUYkUPASSI6sbpZZD6wcS9v1wg%3D"
+      }
+    }
+  ]
+}

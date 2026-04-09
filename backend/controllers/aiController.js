@@ -2,54 +2,53 @@ const path = require('path');
 const fs = require('fs').promises;
 const openaiService = require('../services/openai');
 
+// Load the master knowledge base
+const CONTEXT_PATH = path.join(__dirname, '../prompts/context.json');
+
+async function getContext() {
+  const data = await fs.readFile(CONTEXT_PATH, 'utf-8');
+  return JSON.parse(data);
+}
+
+async function saveContext(context) {
+  await fs.writeFile(CONTEXT_PATH, JSON.stringify(context, null, 2));
+}
+
 async function getPrompt(filename) {
   const filePath = path.join(__dirname, '../prompts', filename);
   return await fs.readFile(filePath, 'utf-8');
 }
 
-exports.evaluateSolution = async (req, res) => {
-  const { question, userCode } = req.body;
-
-  try {
-    const [systemInstruction, staticContext, questionPrompt] = await Promise.all([
-      getPrompt('evaluationPrompt.txt'),
-      getPrompt('context.txt'),
-      getPrompt('questionPrompt.txt')
-    ]);
-    
-    const prompt = `
-      ${systemInstruction}
-      CHALLENGE QUESTION CONTEXT: ${questionPrompt}
-      CURATED CODE CONTEXT: ${staticContext}
-      THE SPECIFIC CHALLENGE: ${question}
-      STUDENT SUBMISSION: ${userCode}
-    `;
-
-    const aiResponse = await openaiService.getChatCompletion(prompt);
-    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-    const cleanJson = jsonMatch ? jsonMatch[0] : aiResponse;
-
-    const result = JSON.parse(cleanJson);
-    res.json(result);
-  } catch (error) {
-    console.error('Evaluation Error:', error);
-    res.status(500).json({ error: error.message });
-  }
-};
-
 exports.generateNewQuestion = async (req, res) => {
   const difficulty = req.query.difficulty || 'medium';
+  const selectedLangs = req.query.languages ? req.query.languages.split(',') : ['javascript', 'python', 'java'];
 
   try {
-    const [systemInstruction, staticContext] = await Promise.all([
-      getPrompt('questionPrompt.txt'),
-      getPrompt('context.txt')
-    ]);
+    const context = await getContext();
+    const systemInstruction = await getPrompt('questionPrompt.txt');
     
+    // Filter curriculum based on user selection and strict difficulty
+    const filteredCurriculum = {};
+    selectedLangs.forEach(lang => {
+      if (context.curriculum[lang]) {
+        // Deep copy only topics that match the selected difficulty level
+        const domain = context.curriculum[lang];
+        const filteredTopics = domain.topics.filter(t => t.difficulty.toLowerCase() === difficulty.toLowerCase());
+        
+        if (filteredTopics.length > 0) {
+          filteredCurriculum[lang] = {
+            metadata: domain.metadata,
+            topics: filteredTopics
+          };
+        }
+      }
+    });
+
     const fullPrompt = `
       ${systemInstruction}
       SELECTED DIFFICULTY LEVEL: ${difficulty.toUpperCase()}
-      CURATED CONTEXT: ${staticContext}
+      ALLOWED TOPICS/LANGUAGES: ${JSON.stringify(filteredCurriculum)}
+      GLOBAL AI RULES: ${JSON.stringify(context.ai_rules)}
     `;
 
     const aiResponse = await openaiService.getChatCompletion(fullPrompt);
@@ -58,16 +57,145 @@ exports.generateNewQuestion = async (req, res) => {
 
     const result = JSON.parse(cleanJson);
 
-    // Safeguard: Ensure problem is a string
+    // DALL-E Integration: Only if necessary (explicit prompt from AI or drawing type)
+    if (result.dallePrompt || result.type === 'drawing') {
+      try {
+        const promptForIm = result.dallePrompt || `A simple, hand-drawn whiteboard diagram illustrating ${result.title} for ${result.language} curriculum. Use black marker on a white background, rough technical sketch style, simple circles and arrows. NO 3D, NO isometric art.`;
+        const imageUrl = await openaiService.generateImage(promptForIm);
+        result.imageUrl = imageUrl;
+      } catch (imgError) {
+        console.error('Image Generation Failed:', imgError);
+      }
+    }
+
+    // Safeguard: Ensure problem is stringified if it comes back as object
     if (result.problem && typeof result.problem === 'object') {
-      result.problem = Object.entries(result.problem)
-        .map(([key, val]) => `${key.toUpperCase()}:\n${val}`)
-        .join('\n\n');
+      result.problem = JSON.stringify(result.problem, null, 2);
     }
 
     res.json(result);
   } catch (error) {
     console.error('Generation Error:', error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+exports.evaluateSolution = async (req, res) => {
+  const { question, userCode, type } = req.body;
+
+  try {
+    const [systemInstruction, context, questionPrompt] = await Promise.all([
+      getPrompt('evaluationPrompt.txt'),
+      getContext(),
+      getPrompt('questionPrompt.txt')
+    ]);
+    
+    // Determine if we have a visual submission (drawing)
+    const isImage = typeof userCode === 'string' && userCode.startsWith('data:image');
+
+    const prompt = `
+      ${systemInstruction}
+      QUESTION TYPE: ${type || 'code'}
+      CHALLENGE CONTEXT: ${questionPrompt}
+      CURATED RULES: ${JSON.stringify(context.ai_rules)}
+      THE SPECIFIC CHALLENGE: ${question}
+      STUDENT SUBMISSION: ${isImage ? '[VISUAL SKETCH ATTACHED]' : userCode}
+    `;
+
+    const aiResponse = await openaiService.getChatCompletion(prompt, isImage ? userCode : null);
+    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+    const cleanJson = jsonMatch ? jsonMatch[0] : aiResponse;
+
+    const result = JSON.parse(cleanJson);
+
+    // DALL-E Integration for Evaluation Visuals
+    if (result.dallePrompt) {
+      try {
+        const visualAidUrl = await openaiService.generateImage(result.dallePrompt);
+        result.visualAidUrl = visualAidUrl;
+      } catch (imgError) {
+        console.error('Feedback Image Generation Failed:', imgError);
+      }
+    }
+
+    // Persistence: Save the session data for later AI-assisted merging
+    try {
+      const EXTR_PATH = path.join(__dirname, '../prompts/extracted_patterns.json');
+      let currentData = { extracted_lessons: [] };
+      try {
+        const fileContent = await fs.readFile(EXTR_PATH, 'utf-8');
+        currentData = JSON.parse(fileContent);
+      } catch (e) { /* ignore if file doesn't exist yet */ }
+      
+      if (!currentData.extracted_lessons) currentData.extracted_lessons = [];
+      
+      currentData.extracted_lessons.push({
+         timestamp: new Date().toISOString(),
+         type: 'resolved_session',
+         question: question,
+         user_submission: userCode,
+         modality: type,
+         feedback: result
+      });
+      await fs.writeFile(EXTR_PATH, JSON.stringify(currentData, null, 2));
+    } catch (saveError) {
+      console.error('Session Persistence Failed:', saveError);
+    }
+
+    res.json(result);
+  } catch (error) {
+    console.error('Evaluation Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.skipQuestion = async (req, res) => {
+  // Logic to track skipped questions can be added here
+  res.json({ status: 'skipped' });
+};
+
+exports.submitFeedback = async (req, res) => {
+  const { feedback, currentContext } = req.body;
+
+  try {
+    const context = await getContext();
+    const reflectionInstruction = `
+      YOU ARE THE EXPERT TUTOR REFLECTION ENGINE.
+      THE USER HAS PROVIDED FEEDBACK ON YOUR PERFORMANCE OR THE DIFFICULTY.
+      
+      FEEDBACK: "${feedback}"
+      CURRENT CONTEXT: ${JSON.stringify(context)}
+
+      TASK:
+      1. Analyze if the feedback requires a global rule change or a specific topic adjustment.
+      2. Return the UPDATED context JSON object.
+      3. Focus on "leniency", "difficulty spikes", or "incorrect patterns" as mentioned by the user.
+      
+      RETURN ONLY THE UPDATED JSON.
+    `;
+
+    const aiResponse = await openaiService.getChatCompletion(reflectionInstruction);
+    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
+    
+    if (jsonMatch) {
+      const updatedContext = JSON.parse(jsonMatch[0]);
+      await saveContext(updatedContext);
+      res.json({ message: 'Feedback incorporated! My brain has evolved.', status: 'success' });
+    } else {
+      throw new Error('AI failed to generate valid context update.');
+    }
+  } catch (error) {
+    console.error('Feedback Reflection Error:', error);
+    res.status(500).json({ error: 'Failed to evolve from feedback.' });
+  }
+};
+
+exports.getAvailableLanguages = async (req, res) => {
+  try {
+    const context = await getContext();
+    const sortedLangs = Object.keys(context.curriculum).sort();
+    res.json(sortedLangs);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch languages' });
   }
 };

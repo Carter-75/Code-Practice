@@ -1,0 +1,900 @@
+{
+  "info": {
+    "title": "Expert Evolution Curriculum Context",
+    "version": "7.0 \"The Sovereign Problems\"",
+    "description": "Exhaustive problem-centric curriculum with exactly 9 explained problems (3 Easy, 3 Mid, 3 Hard) per domain. Synthesized from OCR master curriculum, project demos (Mongoose/Passport), and expert coding contexts.",
+    "last_updated": "2026-04-09"
+  },
+  "curriculum": {
+    "javascript": {
+      "metadata": { "name": "Javascript", "color": "#F7DF1E" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "DOM Node Insertion",
+          "problem": "Implement a function that appends a new list item to a target UL. The LI should contain the student's full name and store the student's unique ID as a data attribute for future interactions.",
+          "snippet": "const li = document.createElement('li');\nli.textContent = `${student.firstName} ${student.lastName}`;\nli.dataset.id = student.id;\nul.appendChild(li);",
+          "rationale": "Using `dataset` for IDs is an expert standard that avoids non-standard attributes while keeping data accessible to event handlers via `e.target.dataset.id`."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Event Handler Mapping",
+          "problem": "Attach a click event listener to a newly created element that triggers a detailed view load using the element's stored student ID.",
+          "snippet": "li.addEventListener('click', function() {\n  loadDetails(this.dataset.id || student.id);\n});",
+          "rationale": "Expert pattern involves scoping the listener at the point of creation, often using `this` or a closure to ensure the correct context is passed to the loader."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "DOM Clearing & Header Creation",
+          "problem": "Clear a detail pane's current content and insert a new heading element containing the subject's name to prepare for a fresh data load.",
+          "snippet": "detailsDiv.innerHTML = '';\nconst nameHeader = document.createElement('h2');\nnameHeader.textContent = `${student.firstName} ${student.lastName}`;\ndetailsDiv.appendChild(nameHeader);",
+          "rationale": "Setting `innerHTML = ''` is a performant expert way to clear nodes before re-populating, preventing duplicate content on rapid user interactions."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Async Data Summary",
+          "problem": "Fetch a collection of student records and return a sanitized summary array containing only the IDs and full names, avoiding leaking sensitive private data.",
+          "snippet": "fetch('/api/v1/students')\n  .then(res => res.json())\n  .then(students => {\n    const summaries = students.map(s => ({\n      id: s.id, \n      fullName: `${s.firstName} ${s.lastName}`\n    }));\n    console.log(summaries);\n  });",
+          "rationale": "Mapping data immediately after fetching is an expert guard against over-fetching and ensures the frontend only handles the specific fields it needs for the current view."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Conditional List Rendering",
+          "problem": "Safely iterate over a student's course list to render LI elements, providing a 'NONE' fallback if the list is empty or undefined to maintain UI integrity.",
+          "snippet": "if (student.courses && student.courses.length > 0) {\n  student.courses.forEach(c => renderCourse(c));\n} else {\n  const empty = document.createElement('li');\n  empty.textContent = 'NONE';\n  list.appendChild(empty); \n}",
+          "rationale": "Defensive programming (checking existance + length) is an expert standard for handling API responses where optional fields might be missing."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "API Error Resilience",
+          "problem": "Implement a fetch call that logs a professional error message to the console if the request fails, ensuring the application doesn't silent-fail on network issues.",
+          "snippet": "fetch('/api/v1/students')\n  .then(res => res.json())\n  .catch(err => {\n    console.error('Fetch operation failed:', err.message);\n  });",
+          "rationale": "Expert error handling should always include specific messaging or UI feedback rather than a generic log, allowing for faster debugging in production environments."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Memoized Logic Factories",
+          "problem": "Create a higher-order function that returns a memoized version of a calculation, storing results in a private cache to optimize repeated high-cost operations.",
+          "snippet": "const memoize = (fn) => {\n  const cache = {};\n  return (...args) => {\n    const n = JSON.stringify(args);\n    if (n in cache) return cache[n];\n    return (cache[n] = fn(...args));\n  };\n};",
+          "rationale": "Memoization is an expert optimization pattern for computationally expensive functions, significantly reducing CPU load in complex web applications."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Custom Elements Lifecycle",
+          "problem": "Define a standalone Web Component that renders a specific template upon mounting to the DOM using the standard component lifecycle methods.",
+          "snippet": "class MyComponent extends HTMLElement {\n  connectedCallback() {\n    this.innerHTML = '<div class=\"prof-card\">Expert Component</div>';\n  }\n}\ncustomElements.define('my-prof-comp', MyComponent);",
+          "rationale": "Modern expert JS prioritizes standard Web Components over framework-specific ones when building highly portable UI libraries."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Event Propagation Guard",
+          "problem": "Implement a handler that prevents both event bubbling and the default browser action, essential for nested interactive components.",
+          "snippet": "const guardedHandler = (event) => {\n  event.stopPropagation();\n  event.preventDefault();\n  processLogic();\n  return false;\n};",
+          "rationale": "Explicitly managing the event lifecycle is an expert requirement when building complex UIs like modal overlays or tree-view navigators."
+        }
+      ]
+    },
+    "express_api": {
+      "metadata": { "name": "Express & API", "color": "#000000" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "JSON Response Mapping",
+          "problem": "Create a GET route for '/api/v1/students' that returns a collection of students as a clean JSON array.",
+          "snippet": "router.get('/api/v1/students', (req, res) => {\n  res.json(students);\n});",
+          "rationale": "Using `res.json()` is the expert standard for APIs as it correctly sets the Content-Type header to application/json automatically."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Resource Creation Patterns",
+          "problem": "Implement a POST route that extracts a 'title' from the request body and returns a 201 Created status alongside the confirmed object.",
+          "snippet": "router.post('/api/courses', (req, res) => {\n  const { title } = req.body;\n  res.status(201).json({ title });\n});",
+          "rationale": "Returning a 201 status code is an expert RESTful standard for successful resource creation, providing clear semantic meaning to the client."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Silent Deletion (204)",
+          "problem": "Design a DELETE endpoint that performs a silent cleanup and returns a 204 No Content status upon successful execution.",
+          "snippet": "router.delete('/api/students/:id', (req, res) => {\n  performCleanup(req.params.id);\n  res.status(204).end();\n});",
+          "rationale": "204 No Content is the expert choice for deletions where no response body is necessary, saving bandwidth and indicating total success."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Latency Logger Middleware",
+          "problem": "Construct a middleware that records the start time of a request and logs the method, URL, and a high-precision timestamp to the server console.",
+          "snippet": "function latencyLogger(req, res, next) {\n  req.start = new Date();\n  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);\n  next();\n}",
+          "rationale": "Attaching data to the `req` object is an expert pattern for passing information between middleware layers (e.g., to calculate total response time in a final hook)."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Header-Based Versioning",
+          "problem": "Implement a global middleware for all '/api/v1/*' routes that verifies the presence of a specific 'X-API' header with value 'STU', returning 400 if invalid.",
+          "snippet": "router.all('/api/v1/*', (req, res, next) => {\n  if (req.header('X-API') !== 'STU') {\n    return res.status(400).send();\n  }\n  next();\n});",
+          "rationale": "Mandatory header checks at the router level are an expert security and versioning strategy common in enterprise API design."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Parametric Identification",
+          "problem": "Create a route that identifies a resource by ID from the URL parameters using `parseInt`, returning a 404 error if the resource is not found.",
+          "snippet": "router.get('/api/students/:id', (req, res) => {\n  const id = parseInt(req.params.id);\n  const item = data.find(s => s.id === id);\n  if (!item) return res.status(404).json({ error: 'Not Found' });\n  res.json(item);\n});",
+          "rationale": "Explicitly parsing parameters and returning early with appropriate 4xx codes is crucial for expert-level API robustness."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Role-Authorization Factory",
+          "problem": "Design a higher-order middleware factory that takes an array of roles and returns a middleware that checks if the authenticated user has permit.",
+          "snippet": "function requireRole(roles) {\n  return (req, res, next) => {\n    if (req.user && roles.includes(req.user.role)) return next();\n    res.status(403).json({ error: 'Forbidden' });\n  };\n}",
+          "rationale": "Factories are an expert pattern for generating reusable, configurable middleware, keeping the router definitions clean and readable."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Header Obfuscation logic",
+          "problem": "Create a middleware that removes specific security-sensitive headers like 'X-Powered-By' for all outgoing responses to minimize server footprint.",
+          "snippet": "function deFingerprint(req, res, next) {\n  res.removeHeader('X-Powered-By');\n  next();\n}",
+          "rationale": "Removing identifying headers is an expert security 'hardening' step that makes it harder for malicious actors to identify server technology."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Bearer Auth Integration",
+          "problem": "Implement an expert-level auth middleware that extracts a Bearer token from the Authorization header, verifies it, and attaches the user to the request.",
+          "snippet": "async function authenticate(req, res, next) {\n  const header = req.get('Authorization');\n  const token = header && header.startsWith('Bearer ') ? header.slice(7) : null;\n  if (!token) return res.status(401).send();\n  try { req.user = await verify(token); next(); } catch { res.status(401).send(); }\n}",
+          "rationale": "Standardizing on 'Bearer' tokens in Authorization headers is the expert industry standard for secure, stateless API communication."
+        }
+      ]
+    },
+    "auth_security": {
+      "metadata": { "name": "Auth & Security", "color": "#333333" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Secure Session Initialization",
+          "problem": "Initialize an Express session with a custom secret, disabling resave to improve performance and setting 'saveUninitialized' to false for security.",
+          "snippet": "app.use(session({\n  secret: 'expert_evolution_key',\n  resave: false,\n  saveUninitialized: false\n}));",
+          "rationale": "Setting `resave: false` is an expert standard to prevent unnecessary race conditions and DB write pressure on session lookups."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "HttpOnly Cookie Storage",
+          "problem": "Store a user preference token in a cookie that is strictly inaccessible to client-side scripts to mitigate XSS risks.",
+          "snippet": "res.cookie('theme', 'dark', { httpOnly: true, maxAge: 86400000 });",
+          "rationale": "The `httpOnly` flag is an expert-mandated security control that blocks `document.cookie` access, a primary vector for session hijacking."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Logout Cleanup",
+          "problem": "Implement a logout route that completely destroys the user session and clears the session ID cookie from the client browser.",
+          "snippet": "app.post('/logout', (req, res) => {\n  req.session.destroy();\n  res.clearCookie('connect.sid');\n  res.status(200).send();\n});",
+          "rationale": "Explicitly clearing the cookie alongside destroying the server-side session ensures a total expert-level logout state."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Passport Strategy Hook",
+          "problem": "Configure a Passport Local Strategy that searches for a user by email and utilizes bcrypt to verify the salted password hash.",
+          "snippet": "passport.use(new LocalStrategy({ usernameField: 'email' }, async (email, pass, done) => {\n  const user = await User.findOne({ email });\n  if (!user || !await bcrypt.compare(pass, user.pass)) return done(null, false);\n  return done(null, user);\n}));",
+          "rationale": "Bcrypt's `compare` function is an expert requirement to counter timing attacks and handle salted hashes securely without exposing the algorithm internals."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Session Serialization",
+          "problem": "Implement Passport's serialization and deserialization hooks to store only the student's unique ID in the session object to minimize session size.",
+          "snippet": "passport.serializeUser((user, done) => done(null, user.id));\npassport.deserializeUser(async (id, done) => {\n  const user = await User.findById(id);\n  done(null, user);\n});",
+          "rationale": "Storing only the ID (serialization) and fetching the full object (deserialization) is an expert memory optimization for high-traffic servers."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Authenticated Route Guard",
+          "problem": "Create a middleware that utilizes Passport's `req.isAuthenticated()` method to block unauthorized access to protected dashboard routes.",
+          "snippet": "function ensureAuth(req, res, next) {\n  if (req.isAuthenticated()) return next();\n  res.status(401).json({ error: 'Login required' });\n}",
+          "rationale": "Standardizing on `req.isAuthenticated()` provided by Passport is the expert way to maintain auth-engine independence within your controllers."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "JWT Signature logic",
+          "problem": "Generate a stateless JSON Web Token containing the user's ID and role, signed with a secret and set to expire in 1 hour.",
+          "snippet": "const token = jwt.sign({ id: user.id, role: user.role }, secret, { expiresIn: '1h' });",
+          "rationale": "Short-lived tokens with explicit expiration (exp claims) are an expert standard for mitigating the impact of leaked or stolen credentials."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "CSRF Mitigation Headers",
+          "problem": "Configure a server-side guard that verifies a custom 'X-SID' header on requests, matching it against a secure, HttpOnly session ID.",
+          "snippet": "const checkSid = (req, res, next) => {\n  if (req.headers['X-SID'] === req.sessionID) return next();\n  res.status(403).json({ error: 'CSRF Blocked' });\n}",
+          "rationale": "Requiring a custom header is an expert defense-in-depth tactic against CSRF, as standard browser forms cannot easily spoof custom headers."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Expert Sanitization Hook",
+          "problem": "Implement a global middleware that removes identifying metadata (like version info) from responses and sets a nosniff policy for resource types.",
+          "snippet": "app.use((req, res, next) => {\n  res.setHeader('X-Content-Type-Options', 'nosniff');\n  res.removeHeader('X-Powered-By');\n  next();\n});",
+          "rationale": "The 'nosniff' header is an expert security browser instruction that prevents MIME-type sniffing, a common vector for XSS attacks via file uploads."
+        }
+      ]
+    },
+    "mongoose": {
+      "metadata": { "name": "Mongoose DB", "color": "#880000" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Schema Modeling",
+          "problem": "Define a Mongoose schema for a User that includes a mandatory, unique email field and a timestamp for account creation.",
+          "snippet": "const s = new mongoose.Schema({\n  email: { type: String, required: true, unique: true },\n  createdAt: { type: Date, default: Date.now }\n});",
+          "rationale": "Explicitly setting `unique: true` at the schema level allows Mongoose to coordinate with MongoDB to build underlying expert index structures automatically."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Document Save logic",
+          "problem": "Implement a pattern to save a new document to the database, ensuring you handle potential errors using a standardized catch block.",
+          "snippet": "new User(data).save()\n  .then(doc => console.log('Saved:', doc.id))\n  .catch(err => console.error('DB Error:', err.message));",
+          "rationale": "Expert practice always includes specific error handling on `.save()` to catch validation or uniqueness constraints before they crash the Node process."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Basic Lookup Filters",
+          "problem": "Search for all students older than 18 using a Mongoose query that returns only the matching documents.",
+          "snippet": "Student.find({ age: { $gt: 18 } }).then(results => res.json(results));",
+          "rationale": "Leveraging MongoDB's query operators (`$gt`, `$lt`) within Mongoose is the expert way to offload filtering logic to the database layer."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Computed Virtuals",
+          "problem": "Configure a schema virtual that computes a student's full name dynamically from 'firstName' and 'lastName' fields without storing it in the DB.",
+          "snippet": "s.virtual('fullName').get(function() {\n  return `${this.firstName} ${this.lastName}`;\n});\ns.set('toJSON', { virtuals: true });",
+          "rationale": "Using `virtuals` avoids data redundancy and ensures consistent formatting across all API responses that utilize the model."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Relationship Population",
+          "problem": "Implement an expert-level find query that automatically 'inflates' (populates) a student's enrolled course IDs into full course objects.",
+          "snippet": "Student.find({ id: 123 }).populate('courses', 'title prefix').exec();",
+          "rationale": "Specifying specific fields in `.populate()` (e.g., 'title prefix') is an expert optimization that prevents unnecessary data transfer over the network."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Pre-Save Password Hashing",
+          "problem": "Implement a pre-save hook that hashes the student's password only if the field has been modified, ensuring hash-integrity.",
+          "snippet": "s.pre('save', async function(next) {\n  if (!this.isModified('password')) return next();\n  this.password = await bcrypt.hash(this.password, 10);\n  next();\n});",
+          "rationale": "Middleware hooks are the expert standard for security logic, ensuring that sensitive transformations happen automatically before persistence."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Aggregation Pipelines",
+          "problem": "Design an aggregation pipeline that groups books by genre, calculates the total count, and the average price per category.",
+          "snippet": "Book.aggregate([\n  { $group: { _id: '$genre', count: { $sum: 1 }, avgPrice: { $avg: '$price' } } }\n]);",
+          "rationale": "Aggregation is the expert choice for complex analytical queries that would be prohibitively slow to perform in application memory."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Index Hardening",
+          "problem": "Create a compound index across student 'grade' and 'enrollmentYear' to optimize queries that filter by both high-cardinality fields.",
+          "snippet": "studentSchema.index({ grade: 1, enrollmentYear: -1 });",
+          "rationale": "Compound indexes are an expert database performance requirement for queries utilizing multiple filter criteria, drastically reducing scan times."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Model Static Factories",
+          "problem": "Implement a custom static method on the Student model that finds a student by email and returns an error if not found or unauthorized.",
+          "snippet": "s.statics.findByEmail = function(email) {\n  return this.findOne({ email }).then(u => {\n    if(!u) throw new Error('Not Found'); return u;\n  });\n};",
+          "rationale": "Extracting domain logic into `statics` is an expert architectural pattern that keeps controllers lean and business logic centralized at the data layer."
+        }
+      ]
+    },
+    "c_systems": {
+      "metadata": { "name": "C Programming", "color": "#A8B9CC" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Pointer Indirection",
+          "problem": "Declare an integer, a pointer to that integer, and successfully print the value using the pointer reference.",
+          "snippet": "int x = 10; int *p = &x; printf(\"%d\", *p);",
+          "rationale": "Mastering the `*` (dereference) and `&` (address-of) operators is the expert foundation for all low-level systems programming in C."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Struct Encapsulation",
+          "problem": "Define a struct representing a 2D coordinate (Point) and initialize it using a standard typedef pattern.",
+          "snippet": "typedef struct { int x, y; } Point_t;\nPoint_t p1 = { 10, 20 };",
+          "rationale": "Using `typedef` for structs is an expert C convention that simplifies variable declarations and improves code readability across large projects."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Void Pointer Casting",
+          "problem": "Demonstrate the use of a generic void pointer to point to an integer, then cast it back to an int pointer to extract the value.",
+          "snippet": "void *ptr = &i; printf(\"%d\", *(int*)ptr);",
+          "rationale": "Void pointers enable expert generic programming in C, allowing a single reference to hold any data type before explicit casting."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Dynamic Memory Lifecycle",
+          "problem": "Allocate an array of integers on the heap, verify the allocation was successful, and properly free the memory after use to prevent leaks.",
+          "snippet": "int *arr = malloc(10 * sizeof(int));\nif (arr == NULL) exit(1);\n// use array\nfree(arr);",
+          "rationale": "Checking for `NULL` after `malloc` and ensuring a corresponding `free` is an expert-mandated memory safety standard in systems code."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "String Bounds Safety",
+          "problem": "Copy a source string into a destination buffer while ensuring you do not exceed the destination buffer size to prevent buffer overflows.",
+          "snippet": "strncpy(dest, src, sizeof(dest) - 1);\ndest[sizeof(dest)-1] = '\\0';",
+          "rationale": "Expert C programming prioritizes bounds-checking functions like `strncpy` and manual null-termination to avoid critical security vulnerabilities."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Double Pointer List Manipulation",
+          "problem": "Implement a function that takes a double pointer to a linked list head to insert a new node at the start, modifying the external reference directly.",
+          "snippet": "void insert(node_t **head, int val) {\n  node_t *n = malloc(sizeof(node_t));\n  n->val = val; n->next = *head; *head = n;\n}",
+          "rationale": "Double pointers are an expert pattern for functions that need to modify the address stored in a pointer variable (like a linked list head)."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Recursive List Deallocation",
+          "problem": "Design a recursive function that deallocates an entire linked list structure, ensuring every node's children are freed before the parent.",
+          "snippet": "void free_list(node_t *curr) {\n  if (curr == NULL) return;\n  free_list(curr->next);\n  if (curr->data) free(curr->data);\n  free(curr);\n}",
+          "rationale": "Post-order recursive traversal for deallocation is an expert standard for cleaning up complex nested heap structures safely."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Function Pointer Callbacks",
+          "problem": "Create a generic iterator function that takes a callback pointer and applies it to every integer in an array.",
+          "snippet": "void iter(int *a, int n, void (*cb)(int)) {\n  for(int i=0; i<n; i++) (*cb)(a[i]);\n}",
+          "rationale": "Function pointers are the expert key to modularity in C, allowing logic to be passed as data similarly to modern high-level languages."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Triple Pointer Indirection",
+          "problem": "Demonstrate the mastery of three-level indirection to access a root integer value through pointers to pointers to pointers.",
+          "snippet": "int ***r, **q, *p, i=100;\np = &i; q = &p; r = &q;\nprintf(\"%d\", ***r);",
+          "rationale": "Multi-level indirection is an expert systems requirement for managing complex dynamic tables and nested data structures (like 3D arrays)."
+        }
+      ]
+    },
+    "compilers": {
+      "metadata": { "name": "Compilers", "color": "#004B8D" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Lexical Pattern Matching",
+          "problem": "Define a Flex rule that identifies positive integers and returns a specific NUM token to the parser.",
+          "snippet": "[0-9]+ { return NUM; }",
+          "rationale": "Regex-based tokenization in Flex is the expert entry point for all front-end compiler phases, converting raw text into logical symbols."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Lexer Directive Hooks",
+          "problem": "Configure the Flex scanner to disable the standard `yywrap` library requirement and prevent 'noinput' warnings in the generated C code.",
+          "snippet": "%option noyywrap noinput nounput",
+          "rationale": "Expert compiler engineers use directives to optimize generated scanners for performance and compatibility with modern build tools."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Whitespace Filtering",
+          "problem": "Implement a Flex rule that silently skips spaces, tabs, and newlines to ensure they do not interfere with the syntactical parsing phase.",
+          "snippet": "[ \\t\\n]+ /* skip */",
+          "rationale": "Ignoring trivia (whitespace/comments) is an expert lexical optimization that simplifies the parser's logic by only passing significant tokens."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Bison Token Declaration",
+          "problem": "Define a token in Bison that can carry an internal integer value (ival) back from the lexer for use in semantic actions.",
+          "snippet": "%token <ival> NUMBER",
+          "rationale": "Typing tokens in Bison is an expert requirement for passing literal values (like numbers) from the scanner to the abstract syntax tree builder."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Grammar Rule Synthesis",
+          "problem": "Construct a Bison rule for a sequence of characters that uses left-recursion to maintain stack efficiency during parsing.",
+          "snippet": "sequence: ITEM sequence { ... } | ITEM { ... };",
+          "rationale": "Expert Bison grammars favor specific recursion types to prevent stack overflow and ensure deterministic parsing (LALR(1))."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Error Reporting Logic",
+          "problem": "Implement a standard `yyerror` function that prints the current line number and the specific error message to the stderr stream.",
+          "snippet": "int yyerror(const char *s) {\n  fprintf(stderr, \"Error line %d: %s\\n\", yylineno, s);\n  exit(1);\n}",
+          "rationale": "Professional compilers require precise error reporting (with line numbers) to provide actionable feedback during the development lifecycle."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "AST Node Construction",
+          "problem": "Write a semantic action in Bison that constructs an Abstract Syntax Tree (AST) node for an addition operation using child pointers.",
+          "snippet": "expr: expr PLUS expr { $$ = makeNode(ADD, $1, $3); };",
+          "rationale": "Building an AST in semantic actions is the expert way to transition from syntax analysis to code generation and optimization."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Semantic Scoping checks",
+          "problem": "Implement an action that verifies if a variable exists in the symbol table before allowing it to be used in an expression.",
+          "snippet": "expr: ID { if(!lookup($1)) yyerror('Undefined var'); $$ = $1; };",
+          "rationale": "Expert context-sensitive analysis ensures that names are valid before the compiler attempts to generate final machine instructions."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Complex Semantic Mapping",
+          "problem": "Create a rule that transforms string components into a formatted address string, allocating memory and using `snprintf` for the final value.",
+          "snippet": "addr: NUM NAME NAME { char *b = malloc(128); snprintf(b, 128, '%d %s %s', $1, $2, $3); $$ = b; }",
+          "rationale": "Dynamic memory management within semantic actions allows compilers to store indefinitely sized attributes during the parsing pass."
+        }
+      ]
+    },
+    "automata": {
+      "metadata": { "name": "Automata Theory", "color": "#000000" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Deterministic Transition Mapping",
+          "problem": "Define the transition function for a DFA that moves from state q0 to q1 upon receiving input '0', otherwise remaining in q0.",
+          "snippet": "\u03B4(q0, 0) = q1; \u03B4(q0, 1) = q0;",
+          "rationale": "DFAs are the expert basis for precise state-machine logic where every input must have a unique, deterministic outcome."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Alphabet Definition",
+          "problem": "Formally define an alphabet consisting of binary digits and the resulting set of states for a small machine.",
+          "snippet": "\u03A3 = {0, 1}; Q = {q0, q1, q2};",
+          "rationale": "Defining formal sets (alphabet, states) is the expert requirement for any mathematical model of computation."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Unshown Error States",
+          "problem": "Explain the role of the implicit 'se' (sink/error) state in complex transition tables that omit invalid input paths.",
+          "snippet": "se transitions to itself for all inputs; it is never an accepting state.",
+          "rationale": "Expert diagramming uses 'se' to simplify visuals while maintaining strict deterministic completeness in the mathematical model."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Epsilon-NFA Logic",
+          "problem": "Describe how to transition an NFA from state q0 to either q1 or q2 without consuming any input characters using epsilon transitions.",
+          "snippet": "\u03B4(q0, \u03B5) = {q1, q2};",
+          "rationale": "Epsilon transitions enable expert non-deterministic modeling of choices and branches that don't depend on user input."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Thompson's Construction logic",
+          "problem": "Sketch the logic for an NFA fragment representing the Kleene Star (*) operation using four states and four epsilon transitions.",
+          "snippet": "New start s. New end f. \u03B5 from s to old-start and s to f. \u03B5 from old-end to old-start and f.",
+          "rationale": "Thompson's construction is the expert algorithm for converting regular expressions into machines that can be executed."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Subset Construction Step",
+          "problem": "Explain a single step of the Powerset Construction algorithm, specifically how to find the resulting set state from a set of states {q0, q1}.",
+          "snippet": "\u03B4_DFA({q0, q1}, a) = \u03B5-closure(\u03B4_NFA(q0, a) \u222A \u03B4_NFA(q1, a));",
+          "rationale": "Powerset construction is the expert method for transforming complex non-deterministic machines into efficient, deterministic hardware logic."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Arden's Theorem Implementation",
+          "problem": "Use Arden's Theorem to solve for the regular expression R given the recursive relation R = Q + RP where P does not contain epsilon.",
+          "snippet": "R = Q + RP \u2192 R = QP*",
+          "rationale": "Arden's Theorem is an expert analytical tool for deriving clean regular expressions from complex state transition systems."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "DFA Minimization logic",
+          "problem": "Apply the partitioning algorithm to minimize a DFA, starting with an initial partition of accepting vs. non-accepting states.",
+          "snippet": "P0 = { F, Q-F }; Partition S into S1, S2 if \u03B4(s,a) leads to different partitions for s \u2208 S.",
+          "rationale": "Minimization is an expert optimization that creates the smallest possible physical circuit or code block to implement a specific logic."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Pushdown Automata (PDA) Logic",
+          "problem": "Define the transition for a PDA that pushes 'A' onto the stack after reading 'a' from state q, assuming Z is the initial stack symbol.",
+          "snippet": "\u03B4(q, a, Z) = {(q, AZ)};",
+          "rationale": "PDAs are an expert expansion of finite machines that utilize a stack, enabling the parsing of context-free languages like JSON or C++."
+        }
+      ]
+    },
+    "haskell": {
+      "metadata": { "name": "Haskell", "color": "#5E5086" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "List Recursion Basics",
+          "problem": "Implement a recursive function `sumList` that calculates the total of all integers in a list using the standard head:tail pattern.",
+          "snippet": "sumList [] = 0\nsumList (x:xs) = x + sumList xs",
+          "rationale": "Recursive definition on lists is the expert Haskell foundation for functional data processing without mutable state."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Function Application",
+          "problem": "Define a function that calculates the power of a number x raised to n using basic recursion and a base case of n=0.",
+          "snippet": "power x 0 = 1\npower x n = x * power x (n-1)",
+          "rationale": "Explicit recursive definitions demonstrate expert control over tail-recursive logic before transitioning to higher-order functions."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Pattern Matching Guard",
+          "problem": "Write a function that extracts every other element from a list (the even indices) using pattern matching for empty, single, and multi-element lists.",
+          "snippet": "evenIdx [] = []\nevenIdx [x] = [x]\nevenIdx (x:y:zs) = x : evenIdx zs",
+          "rationale": "Pattern matching `(x:y:zs)` is an expert Haskell way to process bulk list structures (like pairs or triplets) in a single declarative line."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Subtraction Accumulation",
+          "problem": "Implement a 'mystery' function that subtracts the tail result from the head element, producing an oscillating summation across a list.",
+          "snippet": "mystery [] = 0\nmystery (x:xs) = x - mystery xs",
+          "rationale": "Understanding the execution trace of nested recursion is an expert skill required to master complex functional reductions."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "List Comprehension Mapping",
+          "problem": "Use a list comprehension to extract all digits from a list of numbers and calculate their total sum using `show` and `read` conversion.",
+          "snippet": "sumDigits lst = sum [ read [d] | n <- lst, d <- show n ]",
+          "rationale": "Combining `show` (to string) and `read` (back to int) inside a comprehension is an expert technique for character-level data analysis."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Filter and Membership",
+          "problem": "Create a function `countVowels` that calculates the length of a filtered list containing only characters found in a predefined vowel string.",
+          "snippet": "countVowels str = length [ c | c <- str, c `elem` 'aeiouAEIOU' ]",
+          "rationale": "The `elem` check within a list comprehension is an expert declarative pattern that replaces manual looping and conditional checking."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Curried Composition Pipe",
+          "problem": "Implement a function that doubles every other element in a list using a clean pipeline of `reverse`, `zipWith`, and `cycle` functions.",
+          "snippet": "doubler = reverse . zipWith (*) (cycle [1,2]) . reverse",
+          "rationale": "Functional composition (`.`) and partial application are expert Haskell hallmarks that produce concise, point-free logic declarations."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Infinite List Streams",
+          "problem": "Define an infinite list of powers of two using Haskell's lazy evaluation and the standard list-generator notation.",
+          "snippet": "powersOfTwo = 1 : map (*2) powersOfTwo",
+          "rationale": "Infinite lists leverage expert-level lazy evaluation, allowing you to define theoretical structures that only consume memory when specifically accessed."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "The Fibonacci Stream",
+          "problem": "Implement the classic Fibonacci sequence as an infinite stream by zipping the list with its own tail using addition.",
+          "snippet": "fib = 0 : 1 : zipWith (+) fib (tail fib)",
+          "rationale": "This expert self-referential definition is a masterpiece of lazy execution, efficiently generating the sequence without redundant calculations."
+        }
+      ]
+    },
+    "scheme": {
+      "metadata": { "name": "Scheme", "color": "#000000" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Basic Lambda Definition",
+          "problem": "Define a simple squaring function in Scheme using the standard `define` and multiplication logic.",
+          "snippet": "(define (square x) (* x x))",
+          "rationale": "Parenthetical syntax in Scheme enforces an expert understanding of prefix notation and tree-based code execution."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Car/Cdr Extraction",
+          "problem": "Extract the first element from the tail of a list using a combination of car and cdr calls.",
+          "snippet": "(car (cdr '(a b c))) -> b",
+          "rationale": "Mastering Car (Head) and Cdr (Tail) is the expert prerequisite for all symbolic AI and data processing in the Lisp family."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Evaluator Arithmetic",
+          "problem": "Write a nested arithmetic expression that calculates the value after dividing a number by a fraction within a larger summation.",
+          "snippet": "(+ 1.5 (* 2 (- 1 1/4)) -5.7)",
+          "rationale": "Handling exact fractions and decimals simultaneously demonstrates expert knowledge of Scheme's robust numerical tower."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Recursive Zero Counter",
+          "problem": "Implement a function that recursively counts the number of zeros in a given list, returning the integer total.",
+          "snippet": "(define (count-zeros lst)\n  (if (null? lst) 0\n    (if (= 0 (car lst)) (+ 1 (count-zeros (cdr lst)))\n      (count-zeros (cdr lst)))))",
+          "rationale": "Expert Scheme recursion requires explicit base-case (`null?`) checks and proper conditional branching to maintain functional pureness."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Recursive Tail Access",
+          "problem": "Create a function `rac` (reverse of car) that finds the last element of a list by recursively traversing to the final node.",
+          "snippet": "(define (rac lst)\n  (if (null? (cdr lst)) (car lst)\n    (rac (cdr lst))))",
+          "rationale": "Efficiency in Scheme often relies on tail-recursion like this, where the final operation is the recursive call, allowing for compiler optimization (TCO)."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "List Suffix Generator",
+          "problem": "Implement a function that returns a list containing all the suffixes of an input list, including the empty list.",
+          "snippet": "(define (suffixes l)\n  (if (null? l) '(()) (cons l (suffixes (cdr l)))))",
+          "rationale": "Expert use of `cons` (construct) allows you to build nested list results dynamically as you unwind a recursive stack."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Set Equality Logic",
+          "problem": "Design a boolean function that determines if two lists are equal as sets by verifying each is a subset of the other.",
+          "snippet": "(define (set-equal? S1 S2)\n  (and (subset? S1 S2) (subset? S2 S1)))",
+          "rationale": "Composing complex logic from simpler predicates (`subset?`) is an expert architectural standard in functional programming."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Generative Map Mapping",
+          "problem": "Implement an expert-level coordinate midpoint function that applies a lambda across two coordinate lists using `map`.",
+          "snippet": "(define (midpoint p1 p2)\n  (map (lambda (x y) (/ (+ x y) 2)) p1 p2))",
+          "rationale": "Mapping a lambda over multiple lists simultaneously is an advanced expert technique for high-performance vector-like operations."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Continuation Hooks (call/cc)",
+          "problem": "Demonstrate a basic 'escape' using `call-with-current-continuation`, passing a result back directly to an external context.",
+          "snippet": "(call/cc (lambda (k) (k 'result)))",
+          "rationale": "Continuations (`call/cc`) are the most powerful and expert-level construct in Scheme, enabling custom control flows like exceptions or green threads."
+        }
+      ]
+    },
+    "regex": {
+      "metadata": { "name": "Regex", "color": "#000000" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Strict Digit Matching",
+          "problem": "Construct a regular expression that validates a 4-digit input consisting only of numbers, ensuring it starts and ends exactly with these 4 digits.",
+          "snippet": "^[0-9]{4}$",
+          "rationale": "Using anchors (`^` and `$`) combined with explicit quantifiers (`{n}`) is an expert requirement for data validation logic."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Literal Alternation",
+          "problem": "Create a pattern that matches either 'abc' or 'aac' using a grouping alternation logic.",
+          "snippet": "(abc|aac)",
+          "rationale": "Alternation (`|`) within groups is an expert fundamental for matching sets of literal strings or keyword variations."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Alpha Plus Matcher",
+          "problem": "Write a regex that identifies a sequence of one or more alphabetic characters, supporting both upper and lower case.",
+          "snippet": "[a-zA-Z]+",
+          "rationale": "Character classes combined with the `+` quantifier (one or more) are the expert workhorses of simple text tokenization."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Binary Alternation Streams",
+          "problem": "Implement a pattern that matches any string of '01' groups or single '1's, optionally ending with a single '0'.",
+          "snippet": "(01|1)*0?",
+          "rationale": "Complex alternation within Kleene stars (*) demonstrates an expert level of understanding of state machine transitions in text."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Presence Verification",
+          "problem": "Design a pattern that ensures a string contains at least three '1' characters, separated by any number of '0's.",
+          "snippet": "0*10*10*1(0|1)*",
+          "rationale": "Positional enforcement using 'at least' counts is an expert validation technique for verifying data completeness."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Paired Bit Logic",
+          "problem": "Construct a regex that matches strings where bits must always appear in pairs of identical characters (00 or 11).",
+          "snippet": "(00|11)*",
+          "rationale": "Group duplication rules are an expert pattern for validating structured symbolic data like repeated tags or binary sequences."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Interleaved Sequences",
+          "problem": "Implement a complex matcher that permits '0's and '10's in any order, allowing an optional '11' or null string at any point.",
+          "snippet": "(0|10)*(11|\u03B5)(0|10)*",
+          "rationale": "Explicit epsilon (\u03B5) handling in regex strings is an expert mark of someone who understands the underlying automata theory."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Modulo Pattern logic",
+          "problem": "Create an expert pattern that only accepts strings of bits where the number of zeros following a specific marker follows a modulo-3 rule.",
+          "snippet": "(0|1)*0((0|1)(0|1)(0|1))*0(0|1)*",
+          "rationale": "Implementing modular arithmetic logic within a regex is an advanced expert skill used in complex data packet verification."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Positive Lookbehind",
+          "problem": "Extract a sequence of digits from a string, but only if they are immediately preceded by the literal text 'ID: '.",
+          "snippet": "(?<=ID: )\\d+",
+          "rationale": "Lookaround assertions (`?<=`) are expert tools for extracting data based on context without including that context in the match itself."
+        }
+      ]
+    },
+    "mips": {
+      "metadata": { "name": "MIPS Assembly", "color": "#FF5733" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Syscall Integer Input",
+          "problem": "Implement a routine that prompts for an integer, reads it from the user, and moves the result into register $t0 for processing.",
+          "snippet": "li $v0, 5\nsyscall\nmove $t0, $v0",
+          "rationale": "Register $v0 is the expert convention for syscall commands and return values; failing to move the value immediately risks overwriting it."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Standard String Output",
+          "problem": "Display a pre-defined message to the user by loading its address and executing a print-string syscall.",
+          "snippet": "li $v0, 4\nla $a0, msg\nsyscall",
+          "rationale": "Register $a0 is the expert-standard argument register; loading the address (`la`) is required as the print syscall expects a pointer, not contents."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Basic Register Summation",
+          "problem": "Calculate the sum of values stored in $t0 and $t1, storing the final result in $t2.",
+          "snippet": "add $t2, $t0, $t1",
+          "rationale": "Using temporary registers ($t0-$t9) is an expert practice to avoid modifying saved registers ($s0-$s7) without proper stack preservation."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Equality Branching",
+          "problem": "Implement a conditional jump that branches to 'found_label' if the content of register $t0 matches register $t1.",
+          "snippet": "beq $t0, $t1, found_label",
+          "rationale": "The `beq` (branch if equal) instruction is the expert core of all high-level 'if' statements in assembly logic."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Bound checking Logic",
+          "problem": "Compare two registers and branch to an error label if the first is less than the second using 'set-less-than'.",
+          "snippet": "slt $t0, $s0, $s1\nbne $t0, $zero, error_lbl",
+          "rationale": "Expert MIPS coding uses `slt` to set a flag register and `bne/beq` to act on it, as MIPS lacks a single 'blt' (branch-less-than) hardware instruction."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Arithmetic Indexing Loop",
+          "problem": "Create a loop that increments a counter in $t0 until it reaches the value 10, branching back on each iteration.",
+          "snippet": "loop:\n  addi $t0, $t0, 1\n  bne $t0, 10, loop",
+          "rationale": "Placing the condition check at the end of the block is an expert micro-optimization that reduces the total number of jump instructions executed."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Stack Frame Allocation",
+          "problem": "Allocate space on the stack to save the return address and a local argument before calling a sub-procedure.",
+          "snippet": "addi $sp, $sp, -8\nsw $ra, 4($sp)\nsw $a0, 0($sp)\njal child_proc",
+          "rationale": "Managing the stack pointer ($sp) is an expert requirement for recursive or nested functions where register values would otherwise be overwritten."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Procedure Return logic",
+          "problem": "Restore a saved return address from the stack and jump back to the calling instruction to finalize a sub-procedure.",
+          "snippet": "lw $ra, 4($sp)\naddi $sp, $sp, 8\njr $ra",
+          "rationale": "Always matching 'addi' stack adjustments in the prologue and epilogue is the expert guard against stack corruption and program crashes."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Dynamic Heap Allocation (sbrk)",
+          "problem": "Expertly request 32 bytes of dynamic memory from the system heap, moving the returned heap pointer into $s0.",
+          "snippet": "li $v0, 9\nli $a0, 32\nsyscall\nmove $s0, $v0",
+          "rationale": "Syscall 9 (sbrk) is the expert method for heap memory management in MIPS, similar to C's `malloc` at the hardware level."
+        }
+      ]
+    },
+    "prolog": {
+      "metadata": { "name": "Prolog", "color": "#74283C" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Relational Facts",
+          "problem": "Define a factual relationship stating that 'Alice' is a parent of 'Bob' in the global knowledge base.",
+          "snippet": "parent(alice, bob).",
+          "rationale": "Facts are the expert starting point of Prolog, where lowercase atoms represent specific objects and parentheses define their relations."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Property Definitions",
+          "problem": "Assert that a specific entity 'Bob' likes a specific object 'Apple' as an expert declarative truth.",
+          "snippet": "likes(bob, apple).",
+          "rationale": "Expert Prolog involves defining world-states via properties, allowing the engine to later infer solutions through logical resolution."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Variable Resolution Queries",
+          "problem": "Write a query that asks the Prolog system to find every entity X that likes 'Pizza'.",
+          "snippet": "?- likes(X, pizza).",
+          "rationale": "Variables (starting with capital letters) allow the Prolog engine to perform pattern matching and return all valid bindings from the data."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Logical Rules (Grandparent)",
+          "problem": "Define an expert rule for 'grandparent' that resolves as true if X is a parent of Y, and Y is a parent of Z.",
+          "snippet": "grandparent(X, Z) :- parent(X, Y), parent(Y, Z).",
+          "rationale": "The `:-` operator (if) enables expert logic modeling where complex relations are derived from simple, atomic facts through conjunction (`,`)."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "List Membership Recursion",
+          "problem": "Implement an expert-level membership check that resolves if X is the head of a list, or recursively if X is in the tail.",
+          "snippet": "member(X, [X|_]).\nmember(X, [_|T]) :- member(X, T).",
+          "rationale": "Using the underscore (`_`) for 'don't care' variables is an expert optimization that prevents unnecessary variable bindings during search."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "List Appending Logic",
+          "problem": "Define the recursive append rule where appending an empty list to L results in L, and prepending H maintains the recursive structure.",
+          "snippet": "append([], L, L).\nappend([H|T], L, [H|R]) :- append(T, L, R).",
+          "rationale": "Append is the 'hello world' of expert recursive list processing in Prolog, demonstrating how results are accumulated in the head through unifications."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Recursive Ancestry (Transitive)",
+          "problem": "Implement a transitive 'ancestor' rule that correctly handles an arbitrary depth of parental links.",
+          "snippet": "ancestor(X, Y) :- parent(X, Y).\nancestor(X, Y) :- parent(X, Z), ancestor(Z, Y).",
+          "rationale": "Recursive logic with two rules (base case + inductive case) allows for expert resolution of infinite-depth graphs."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Deterministic Cut (!)",
+          "problem": "Use the 'Cut' (!) operator to ensure a 'max' function is deterministic, preventing the system from backtracking to an incorrect alternative once a path is confirmed.",
+          "snippet": "max(X, Y, X) :- X >= Y, !.\nmax(X, Y, Y).",
+          "rationale": "The Cut operator is an expert tool for performance and correctness, 'freezing' the choice point and preventing redundant or invalid explorations."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Accumulator-Based Reversal",
+          "problem": "Implement an expert-level, tail-recursive list reversal that uses an accumulator to maintain efficiency.",
+          "snippet": "reverse(L, R) :- rev(L, [], R).\nrev([], Acc, Acc).\nrev([H|T], Acc, R) :- rev(T, [H|Acc], R).",
+          "rationale": "Using a secondary 'worker' predicate (`rev`) with an accumulator is the expert pattern for high-performance linear-time list processing."
+        }
+      ]
+    },
+    "python": {
+      "metadata": { "name": "Python", "color": "#3776AB" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "F-String Interpolation",
+          "problem": "Implement a professional greeting using localized f-string formatting to combine a variable name into a string.",
+          "snippet": "print(f'System online, welcome {user.name}')",
+          "rationale": "F-strings are the expert Python choice for readability and performance, offering faster execution than `.format()` or `%` interpolation."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "List Comprehensions",
+          "problem": "Generate a list of even numbers from 0 to 9 in a single declarative line of code.",
+          "snippet": "evens = [x for x in range(10) if x % 2 == 0]",
+          "rationale": "Comprehensions are an expert Python staple that condenses logic into a readable format while being more performant than manual loops."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Context Manager Safety",
+          "problem": "Safely read the entire contents of a file ensuring that the file handle is automatically closed even if an error occurs.",
+          "snippet": "with open('expert.txt', 'r') as f:\n  data = f.read()",
+          "rationale": "The `with` statement utilizes the expert Context Manager pattern, preventing file handle leaks and ensuring resource integrity."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Function Wrapper logic",
+          "problem": "Design a 'debug' decorator that prints the name of the function before it executes, returning the original result.",
+          "snippet": "def debug(fn):\n  def wrap(*args, **kwargs):\n    print(f'Executing {fn.__name__}')\n    return fn(*args, **kwargs)\n  return wrap",
+          "rationale": "Decorators are an expert pattern for implementing cross-cutting concerns (like logging or auth) without modifying the target function logic."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Permutation Iterations",
+          "problem": "Use the standard library to generate all unique permutations of a list of three integers efficiently.",
+          "snippet": "import itertools\nperms = list(itertools.permutations([1,2,3]))",
+          "rationale": "Leveraging `itertools` is an expert requirement, as the library is implemented in C and optimized for high-performance iteration."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Inheritance Modification",
+          "problem": "Extend the built-in `list` class to create a custom container that doubles every value accessed via an index.",
+          "snippet": "class DoubleList(list):\n  def __getitem__(self, i):\n    return super().__getitem__(i) * 2",
+          "rationale": "Overriding magic methods like `__getitem__` is an expert-level object-oriented tactic for creating powerful, domain-specific data structures."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Metaclass Customization",
+          "problem": "Define a metaclass that intercepts class creation to modify the attributes or enforce specific naming conventions.",
+          "snippet": "class Meta(type):\n  def __new__(cls, name, bases, attrs):\n    attrs['expert_mode'] = True\n    return super().__new__(cls, name, bases, attrs)",
+          "rationale": "Metaprogramming is the peak of expert Python, allowing you to define 'classes that build classes' for advanced architectural frameworks."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Asynchronous Concurrency",
+          "problem": "Launch two concurrent tasks and wait for both to complete using Python's modern `asyncio.gather` pattern.",
+          "snippet": "import asyncio\nasync def main():\n  await asyncio.gather(task_one(), task_two())",
+          "rationale": "Asynchronous programming is an expert necessity for I/O bound tasks, allowing a single thread to handle thousands of concurrent operations."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Generator Delegatng",
+          "problem": "Implement a generator that delegates part of its production to a sub-generator using the `yield from` syntax.",
+          "snippet": "def expert_generator():\n  yield from sub_gen()\n  yield 'Expert Final Item'",
+          "rationale": "`yield from` is an expert optimization that simplifies refactoring by flattening nested generator logic into a single iterable stream."
+        }
+      ]
+    },
+    "java": {
+      "metadata": { "name": "Java", "color": "#007396" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Main Entry Point",
+          "problem": "Implement the standard entry point for a Java application that prints 'Hello Expert' to the system console.",
+          "snippet": "public class Main {\n  public static void main(String[] args) {\n    System.out.println(\"Hello Expert\");\n  }\n}",
+          "rationale": "Understanding the rigid structure of the `public static void main` method is the expert-required first step for JVM execution."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Generic List Initialization",
+          "problem": "Create a type-safe ArrayList for strings and add a single element to it using standard collection methods.",
+          "snippet": "ArrayList<String> list = new ArrayList<>();\nlist.add(\"Expert Context\");",
+          "rationale": "Utilizing generics (`<String>`) is an expert requirement for type-safety, preventing runtime `ClassCastException` errors."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Interface Abstraction",
+          "problem": "Define a simple interface 'Animal' with a single, return-less method 'makeSound' to establish a contract for implementing classes.",
+          "snippet": "public interface Animal {\n  void makeSound();\n}",
+          "rationale": "Interfaces are an expert foundational tool for defining behaviors without implementation, enabling true object-oriented decoupling."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Arithmetic Exception Handling",
+          "problem": "Implement a try-catch block that specifically targets a division-by-zero error, logging the specific error trace when it occurs.",
+          "snippet": "try {\n  int res = 10 / 0;\n} catch (ArithmeticException e) {\n  e.printStackTrace();\n}",
+          "rationale": "Catching specific exceptions rather than a generic `Exception` is an expert standard that allows for precise error-recovery strategies."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Contract Implementation",
+          "problem": "Create a class 'Cat' that implements the 'Animal' interface, specifically overriding the 'makeSound' method to output 'Meow'.",
+          "snippet": "class Cat implements Animal {\n  @Override\n  public void makeSound() {\n    System.out.println(\"Meow\");\n  }\n}",
+          "rationale": "Using the `@Override` annotation is an expert best practice that ensures the compiler verifies the method signature actually matches the interface."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Generic Array Printer",
+          "problem": "Write a generic method that can accept an array of any type and print every element to the console using an enhanced for-loop.",
+          "snippet": "public <T> void printItems(T[] array) {\n  for (T element : array) System.out.println(element);\n}",
+          "rationale": "Generic methods enable expert code reuse, allowing the same logic to operate on different data types without duplication."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Stream Filter Pipelines",
+          "problem": "Utilize the modern Streams API to filter a list of integers, extracting only the even ones into a new list collection.",
+          "snippet": "List<Integer> evens = list.stream()\n  .filter(n -> n % 2 == 0)\n  .collect(Collectors.toList());",
+          "rationale": "Functional streams are an expert Java standard that provides readable, declarative alternatives to verbose imperative looping."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Synchronized Critical Sections",
+          "problem": "Implement a thread-safe block using the `synchronized` keyword to ensure that only one thread can modify a shared count at a time.",
+          "snippet": "synchronized(this) {\n  this.count++;\n}",
+          "rationale": "Synchronization is an expert necessity for concurrent programming, preventing 'race conditions' that could lead to inconsistent data states."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Optional Mapping Patterns",
+          "problem": "Use the `Optional` container to search for a user by ID, transforming the result into a new User object if present, safely avoiding nulls.",
+          "snippet": "Optional<User> u = repo.findById(id).map(User::new);",
+          "rationale": "`Optional` is the expert industry-standard replacement for `null` checks, leading to significantly more robust and crash-resistant codebases."
+        }
+      ]
+    },
+    "sql": {
+      "metadata": { "name": "SQL Analytics", "color": "#00758F" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Simple Filtered Query",
+          "problem": "Retrieve all active users from a 'users' table, sorting them alphabetically by name in descending order.",
+          "snippet": "SELECT * FROM users WHERE status = 'active' ORDER BY name DESC;",
+          "rationale": "Mastering the `ORDER BY` and `WHERE` clauses is the expert fundamental for all database-driven data extraction."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Atomic Data Updates",
+          "problem": "Update a specific student's credits by adding 3 to their current total using a targeted ID filter.",
+          "snippet": "UPDATE students SET credits = credits + 3 WHERE id = 'S123';",
+          "rationale": "Explicit filtering on updates is an expert safety mandate to prevent accidental data-loss across entire table rows."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Resource Deletion",
+          "problem": "Implement a query to delete all tasks that are currently marked as 'completed' from the database.",
+          "snippet": "DELETE FROM tasks WHERE status = 'completed';",
+          "rationale": "RESTful expert cleanup logic relies on precise SQL deletions to maintain database performance and data relevance."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Relational Joins",
+          "problem": "Create a query that joins two tables ('users' and 'orders') to show user names alongside their total order amounts for shipped orders.",
+          "snippet": "SELECT u.name, o.total FROM users u\nJOIN orders o ON u.id = o.user_id\nWHERE o.status = 'shipped';",
+          "rationale": "Joining tables via foreign keys is the expert way to normalize data while still retrieving comprehensive reports."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Aggregated Categorization",
+          "problem": "Group products by their category and count the total number of items, returning only categories that have more than 5 products.",
+          "snippet": "SELECT category, COUNT(*) FROM products\nGROUP BY category\nHAVING COUNT(*) > 5;",
+          "rationale": "The `HAVING` clause is an expert filter that operates on aggregated data, something that the standard `WHERE` clause cannot do."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Academic Enrolment Logic",
+          "problem": "List all students currently enrolled in the 'CS' computer science prefix by joining students and courses via their linking table.",
+          "snippet": "SELECT firstName, lastName FROM students s\nJOIN courses c ON s.id = c.studentId\nWHERE c.prefix = 'CS';",
+          "rationale": "Multi-table joins are the expert requirement for analyzing complex institutional relationships, like student course history."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Analytic Window Ranking",
+          "problem": "Rank all products within their specific categories by price, highest first, using a modern analytic window function.",
+          "snippet": "SELECT name, price, RANK() OVER (PARTITION BY category ORDER BY price DESC) as rank FROM products;",
+          "rationale": "Window functions (`OVER`) are an expert analytic power-tool, allowing for complex row-to-row calculations without collapsing the result set."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Common Table Expressions (CTEs)",
+          "problem": "Define a CTE that calculates monthly sales totals and then use it to filter only for months with revenue exceeding 10,000.",
+          "snippet": "WITH Sales_CTE AS (\n  SELECT month, SUM(amt) as total FROM sales GROUP BY month\n)\nSELECT * FROM Sales_CTE WHERE total > 10000;",
+          "rationale": "CTEs are an expert pattern for creating readable, modular SQL queries, significantly improving maintainability over deeply nested subqueries."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Correlated Average Filters",
+          "problem": "Find employees whose salary is higher than the average salary of their own department using a correlated subquery.",
+          "snippet": "SELECT name FROM employees e1\nWHERE salary > (SELECT AVG(salary) FROM employees e2 WHERE e1.dept_id = e2.dept_id);",
+          "rationale": "Correlated subqueries are an expert pattern where the inner query depends on the outer one, essential for comparative departmental analysis."
+        }
+      ]
+    }
+  },
+  "ai_rules": {
+    "global_strictness": "Strict logic evaluation. Focus on expert patterns found in curriculum. Mandatory use of JSON for API responses.",
+    "method_rotation": [ "GET", "POST", "PUT", "DELETE", "PATCH" ],
+    "feedback_overrides": []
+  }
+}

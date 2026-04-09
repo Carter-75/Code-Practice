@@ -12,6 +12,9 @@ const aiRouter = require('./routes/ai');
 
 const app = express();
 
+// Temporary route for AI to view screenshots during curriculum extraction
+app.use('/debug/images', express.static(path.join(__dirname, '../temp_prompt_extract/Prompt')));
+
 const PROJECT_NAME = process.env.PROJECT_NAME || 'Portfolio Project';
 
 // --- MongoDB Setup ---
