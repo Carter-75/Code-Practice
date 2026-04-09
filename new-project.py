@@ -755,9 +755,7 @@ export class App implements OnInit {{
         be_vercel_json = {
             "version": 2,
             "functions": {
-                "app.js": {
-                    "runtime": "@vercel/node"
-                }
+                "app.js": {}
             },
             "rewrites": [
                 { "source": "/(.*)", "destination": "app.js" }
