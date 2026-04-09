@@ -734,9 +734,11 @@ PORT={be_port}
 FRONTEND_PORT={fe_port}
 MONGODB_URI=mongodb://localhost:27017/{project_name}
 
-# Production Settings
+# --- Front-End Production (Copy to Vercel Frontend Project) ---
 PRODUCTION=false
 PROD_FRONTEND_URL=
+
+# --- Back-End Production (Copy to Vercel Backend Project) ---
 PROD_BACKEND_URL=
 """
     (project_root / ".env").write_text(env_content, encoding='utf-8')

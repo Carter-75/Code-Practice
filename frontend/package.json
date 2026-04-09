@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build && node -e \"const fs = require('fs'); const src = 'dist/frontend/browser'; const dest = 'dist/frontend'; if (fs.existsSync(src)) { fs.cpSync(src, dest, {recursive: true}); fs.rmSync(src, {recursive: true}); }\"",
+    "build": "node -e \"const fs = require('fs'); const file = 'src/app/services/ai.service.ts'; let c = fs.readFileSync(file, 'utf8'); c = c.replace('__PRODUCTION__', process.env.PRODUCTION || 'false').replace('__PROD_BACKEND_URL__', process.env.PROD_BACKEND_URL || '').replace('__PROD_FRONTEND_URL__', process.env.PROD_FRONTEND_URL || ''); fs.writeFileSync(file, c);\" && ng build && node -e \"const fs = require('fs'); const src = 'dist/frontend/browser'; const dest = 'dist/frontend'; if (fs.existsSync(src)) { fs.cpSync(src, dest, {recursive: true}); fs.rmSync(src, {recursive: true}); }\"",
     "watch": "ng build --watch --configuration development",
     "test": "vitest"
   },

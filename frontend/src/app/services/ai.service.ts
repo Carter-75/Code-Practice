@@ -34,25 +34,24 @@ export class AiService {
   
   // Dynamic API URL mapping
   private get apiUrl(): string {
+    // Environmental "Burn-In" Toggles
+    const isProd = '__PRODUCTION__' === 'true';
+    const prodBackend = '__PROD_BACKEND_URL__';
+    const prodFrontend = '__PROD_FRONTEND_URL__';
+    
     const host = window.location.hostname;
     const isLocal = host === 'localhost' || host === '127.0.0.1';
     
-    // Fallback logic: 
-    // If we are on localhost, always use the local backend.
-    if (isLocal) {
+    // Explicit Local vs Production logic
+    if (isLocal && !isProd) {
       return 'http://localhost:3000/api/ai';
     }
 
-    // --- Production Configuration ---
-    // If you have a deployed backend, put the URL here.
-    // If this is blank, it will fallback to a relative path '/api/ai'
-    const PROD_BACKEND_URL = ''; 
-    
-    if (PROD_BACKEND_URL) {
-      return `${PROD_BACKEND_URL}/api/ai`;
+    if (prodBackend && !prodBackend.startsWith('__')) {
+      return `${prodBackend}/api/ai`;
     }
 
-    // Default: relative path (assumes frontend and backend are on same domain/proxy)
+    // Default: relative path
     return '/api/ai';
   }
 
