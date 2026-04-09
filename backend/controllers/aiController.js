@@ -6,7 +6,7 @@ const openaiService = require('../services/openai');
 const getSafePath = (relativePath) => {
   const base = process.cwd();
   
-  // 1. Vercel Write Path Redirect (Always use /tmp for persistence on the cloud)
+  // 1. Vercel Write Path Redirect
   const isVercel = process.env.VERCEL === '1' || process.env.PRODUCTION === 'true';
   const isWritableFile = relativePath.includes('extracted_patterns') || relativePath.includes('evolution_rules');
   
@@ -14,39 +14,39 @@ const getSafePath = (relativePath) => {
     return { primaryPath: path.join('/tmp', path.basename(relativePath)) };
   }
 
-  // 2. Build the Triple-Check Object
+  // 2. Build the Quaternary Check Object
   const primaryPath = path.join(base, relativePath);
   const backupPath = path.join(base, 'backend', relativePath);
   const tertiaryPath = path.join(__dirname, '..', relativePath);
+  const quaternaryPath = path.resolve(relativePath); // Resolve from the app's entrypoint
   
-  return { primaryPath, backupPath, tertiaryPath };
+  return { primaryPath, backupPath, tertiaryPath, quaternaryPath };
 };
 
 async function readFileSafe(paths) {
-  // If we have a single writable path from Vercel redirect, use it directly
-  if (!paths.backupPath && !paths.tertiaryPath) {
+  if (!paths.backupPath) {
     try {
       return await fs.readFile(paths.primaryPath, 'utf-8');
     } catch (e) {
-      // For writable files in /tmp, it's okay if they don't exist yet
       if (paths.primaryPath.startsWith('/tmp')) return null;
       throw e;
     }
   }
 
-  // Otherwise, exhaust all possibilities for knowledge base files
   try {
     return await fs.readFile(paths.primaryPath, 'utf-8');
   } catch (e) {
     try {
-      if (!paths.backupPath) throw e;
       return await fs.readFile(paths.backupPath, 'utf-8');
     } catch (e2) {
       try {
-        if (!paths.tertiaryPath) throw e2;
         return await fs.readFile(paths.tertiaryPath, 'utf-8');
       } catch (e3) {
-        throw new Error(`CRITICAL: Knowledge Base Missing. Checked: [${paths.primaryPath}], [${paths.backupPath}], [${paths.tertiaryPath}]. Root was: ${process.cwd()}`);
+        try {
+          return await fs.readFile(paths.quaternaryPath, 'utf-8');
+        } catch (e4) {
+          throw new Error(`FATAL: File Not Found. Checked [${paths.primaryPath}], [${paths.backupPath}], [${paths.tertiaryPath}], [${paths.quaternaryPath}]. Root: ${process.cwd()}`);
+        }
       }
     }
   }
