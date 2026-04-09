@@ -794,7 +794,14 @@ Decoupled MEAN Stack (Angular {fe_port} / Express {be_port}).
 {ai_rules_common}
 """, encoding='utf-8')
 
-    # --- Git Init ---
+    # --- Host-Specific Environment Prep ---
+    if fe_hosting == "vercel" or be_hosting == "vercel":
+        print("\n--- Preparing Vercel Environment ---")
+        try:
+            subprocess.run(["npm", "install", "-g", "vercel@latest"], shell=True, check=True)
+            print("Vercel CLI updated successfully.")
+        except subprocess.CalledProcessError:
+            print("Warning: Could not update Vercel CLI. Please update manually with 'npm i -g vercel@latest'.")
     try:
         subprocess.run(["git", "init"], cwd=project_root, check=True, capture_output=True)
         print("Initialized Git repository.")
