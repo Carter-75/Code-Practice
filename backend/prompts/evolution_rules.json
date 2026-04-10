@@ -13,7 +13,12 @@
     {
        "timestamp": "2026-04-09T18:00:00.000Z",
        "feedback_received": "A logout route with multiple syntax errors (App. Delete, missing arrows, req session) was marked PARTIAL but should be MOSTLY_CORRECT.",
-       "evolution_rule": "MASTER RULE: Prioritize Technical Intent. If a student demonstrates the correct architectural solution (e.g., destroys a session and clears cookies for logout), grade as MOSTLY_CORRECT even if the syntax is completely broken (capitalization, spaces in methods, missing delimiters). PARTIAL must be reserved for logical failure, not syntactic failure."
-    }
-  ]
-}
+        "evolution_rule": "MASTER RULE: Prioritize Technical Intent. If a student demonstrates the correct architectural solution (e.g., destroys a session and clears cookies for logout), grade as MOSTLY_CORRECT even if the syntax is completely broken (capitalization, spaces in methods, missing delimiters). PARTIAL must be reserved for logical failure, not syntactic failure."
+     },
+     {
+        "timestamp": "2026-04-09T20:17:31.000Z",
+        "feedback_received": "Output was truncated/skeletal. Every segment must be production-level finished code, never truncated with comments where logic should be.",
+        "evolution_rule": "ANTI-TRUNCATION RULE: When generating 'Verified Expert Standards' or code examples, NEVER use comments as placeholders (e.g., '// logic here') or truncate the implementation. You MUST provide complete, 'Finished', and production-ready code blocks that include all necessary logic, error handling, and asynchronous patterns. Every segment must be execution-ready and satisfy 100% of the technical requirements of the task."
+     }
+   ]
+ }
