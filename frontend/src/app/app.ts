@@ -4,7 +4,6 @@ import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
 import { ApiService, QuestionResult, EvaluationResult } from './services/api.service';
 import anime from 'animejs';
-import Matter from 'matter-js';
 import confetti from 'canvas-confetti';
 
 @Component({
@@ -35,15 +34,11 @@ export class App implements AfterViewInit {
   isDifficultyDropdownOpen = signal(false);
 
   // Template Refs
-  scene = viewChild<ElementRef>('scene');
   header = viewChild<ElementRef>('header');
   card = viewChild<ElementRef>('card');
   drawingCanvas = viewChild<ElementRef>('drawingCanvas');
 
-  // Physics Engine
-  private engine?: Matter.Engine;
-  private render?: Matter.Render;
-  private runner?: Matter.Runner;
+
 
   // Drawing State
   private ctx?: CanvasRenderingContext2D;
@@ -58,7 +53,6 @@ export class App implements AfterViewInit {
           origin: { y: 0.6 },
           colors: ['#6366f1', '#a855f7', '#ec4899']
         });
-        this.spawnPhysicsObjects(20);
       } else if (this.feedback()?.status === 'INCORRECT') {
         this.shakeCard();
       }
@@ -66,7 +60,6 @@ export class App implements AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.initPhysics();
     this.initEntranceAnimation();
     this.loadAvailableLanguages();
   }
@@ -135,7 +128,6 @@ export class App implements AfterViewInit {
   }
 
   async skipQuestion() {
-    this.explodePhysicsObjects();
     this.generateQuestion();
   }
 
@@ -272,86 +264,12 @@ export class App implements AfterViewInit {
     if (!isDifficultyClick) this.isDifficultyDropdownOpen.set(false);
   }
 
-  @HostListener('window:resize')
-  onResize() {
-    this.updatePhysicsBounds();
-  }
 
-  private updatePhysicsBounds() {
-    const el = this.scene()?.nativeElement;
-    if (!el || !this.render || !this.engine) return;
-
-    const width = el.clientWidth;
-    const height = el.clientHeight || 400;
-
-    this.render.options.width = width;
-    this.render.options.height = height;
-    this.render.canvas.width = width;
-    this.render.canvas.height = height;
-
-    // Remove old ground and add new one
-    const bodies = Matter.Composite.allBodies(this.engine.world);
-    const ground = bodies.find(b => b.isStatic);
-    if (ground) {
-       Matter.World.remove(this.engine.world, ground);
-    }
-    const newGround = Matter.Bodies.rectangle(width / 2, height + 10, width, 20, { isStatic: true });
-    Matter.World.add(this.engine.world, [newGround]);
-  }
 
   setDifficulty(level: string) {
     this.difficulty.set(level);
     localStorage.setItem('appDifficulty', level);
     this.isDifficultyDropdownOpen.set(false);
-  }
-
-  // Physics logic remains the same (truncated in this snippet for brevity, but I will preserve it in the actual file)
-  private initPhysics() {
-    const el = this.scene()?.nativeElement;
-    if (!el) return;
-
-    this.engine = Matter.Engine.create();
-    this.render = Matter.Render.create({
-      element: el,
-      engine: this.engine,
-      options: {
-        width: el.clientWidth,
-        height: el.clientHeight || 400,
-        background: 'transparent',
-        wireframes: false
-      }
-    });
-
-    const ground = Matter.Bodies.rectangle(el.clientWidth / 2, el.clientHeight + 10, el.clientWidth, 20, { isStatic: true });
-    Matter.World.add(this.engine.world, [ground]);
-    
-    this.runner = Matter.Runner.create();
-    Matter.Runner.run(this.runner, this.engine);
-    Matter.Render.run(this.render);
-  }
-
-  private spawnPhysicsObjects(count: number) {
-    if (!this.engine) return;
-    const el = this.scene()?.nativeElement;
-    if (!el) return;
-
-    for (let i = 0; i < count; i++) {
-      const x = Math.random() * el.clientWidth;
-      const size = Math.random() * 20 + 10;
-      const body = Matter.Bodies.circle(x, -50, size/2, { restitution: 0.6, render: { fillStyle: '#6366f1' } });
-      Matter.World.add(this.engine.world, body);
-    }
-  }
-
-  private explodePhysicsObjects() {
-    if (!this.engine) return;
-    const bodies = Matter.Composite.allBodies(this.engine.world).filter(b => !b.isStatic);
-    bodies.forEach(body => {
-      Matter.Body.applyForce(body, body.position, {
-        x: (Math.random() - 0.5) * 0.1,
-        y: -Math.random() * 0.2
-      });
-    });
   }
 
   private initEntranceAnimation() {
