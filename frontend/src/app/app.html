@@ -128,7 +128,7 @@
       </div>
 
       <!-- ADAPTIVE RESPONSE AREAS -->
-      <div *ngIf="question() && !feedback()" class="animate-in space-y-8">
+      <div *ngIf="question()" class="animate-in space-y-8" [ngClass]="feedback() ? 'opacity-60 pointer-events-none select-none' : ''">
         
         <!-- MODE: CODE / TEXT -->
         <div *ngIf="question()?.type === 'code' || question()?.type === 'text'" class="relative group">

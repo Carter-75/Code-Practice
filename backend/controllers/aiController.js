@@ -140,13 +140,13 @@ exports.generateNewQuestion = async (req, res) => {
     const fullPrompt = `
       ${systemInstruction}
       
-      ### THE CHALLENGE DATA
+      ### PRIVATE CALIBRATION REFERENCE (DO NOT ECHO ANY OF THIS TO THE STUDENT)
       DOMAIN: ${selectedTopic.domain.toUpperCase()}
-      TOPIC: ${selectedTopic.title}
-      DIFFICULTY: ${selectedTopic.difficulty}
-      PROBLEM_KEY: ${selectedTopic.problem}
-      EXPERT_SOLUTION: ${selectedTopic.snippet}
-      TECHNICAL_RATIONALE: ${selectedTopic.rationale}
+      TOPIC SKILL: ${selectedTopic.title}
+      DIFFICULTY TIER: ${selectedTopic.difficulty}
+      REFERENCE_PROBLEM (PRIVATE — DO NOT REUSE OR REPHRASE): ${selectedTopic.problem}
+      REFERENCE_SNIPPET (PRIVATE — DO NOT REUSE AS SOLUTION): ${selectedTopic.snippet}
+      UNDERLYING_PRINCIPLE: ${selectedTopic.rationale}
       
       ### TARGET MODALITY
       ${modalityGuidance}
@@ -158,11 +158,14 @@ exports.generateNewQuestion = async (req, res) => {
       CURATED RULES: ${JSON.stringify(context.ai_rules)}
       ADAPTIVE EVOLUTION RULES: ${JSON.stringify(evolutionData.rules)}
       
-      ### INSTRUCTION
-      Your task is to transform the provided CHALLENGE DATA into a high-fidelity training challenge.
-      DO NOT copy the PROBLEM_KEY verbatim; rephrase it into a professional academic task.
-      ALWAYS include the TECHNICAL_RATIONALE in your explanation.
-      STRICTLY ADHERE to the CURATED RULES and ADAPTIVE EVOLUTION RULES.
+      ### YOUR MISSION
+      Using the PRIVATE CALIBRATION REFERENCE above as a skill-level anchor ONLY:
+      1. Understand the UNDERLYING_PRINCIPLE being tested.
+      2. Invent a COMPLETELY ORIGINAL problem with a different scenario, different variable names, different data structures, and a different application context.
+      3. The new problem must test the SAME underlying skill at the SAME difficulty tier.
+      4. Choose whichever question TYPE (code/mcq/text/drawing) you believe is MOST EFFECTIVE for teaching this concept.
+      5. DO NOT echo the reference problem, snippet, or rationale in your output.
+      6. STRICTLY ADHERE to the CURATED RULES and ADAPTIVE EVOLUTION RULES.
     `;
 
     const aiResponse = await openaiService.getChatCompletion(fullPrompt);
