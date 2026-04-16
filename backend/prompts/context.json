@@ -121,6 +121,42 @@
           "problem": "Implement an expert-level auth middleware that extracts a Bearer token from the Authorization header, verifies it, and attaches the user to the request.",
           "snippet": "async function authenticate(req, res, next) {\n  const header = req.get('Authorization');\n  const token = header && header.startsWith('Bearer ') ? header.slice(7) : null;\n  if (!token) return res.status(401).send();\n  try { req.user = await verify(token); next(); } catch { res.status(401).send(); }\n}",
           "rationale": "Standardizing on 'Bearer' tokens in Authorization headers is the expert industry standard for secure, stateless API communication."
+        },
+        {
+          "id": 10, "difficulty": "Easy", "title": "API Health Diagnostics",
+          "problem": "Create a diagnostic GET route for '/api/health' that returns the current server status, environment mode, and an ISO timestamp.",
+          "snippet": "app.get('/api/health', (req, res) => {\n  res.json({ status: 'online', env: process.env.NODE_ENV, time: new Date().toISOString() });\n});",
+          "rationale": "Standardized health routes are an expert requirement for automated monitoring and zero-downtime deployment verification (Liveness/Readiness probes)."
+        },
+        {
+          "id": 11, "difficulty": "Easy", "title": "Static Debug Assets",
+          "problem": "Configure an Express static route to serve a directory of temporary debug images or screenshots for UI auditing purposes.",
+          "snippet": "app.use('/debug/images', express.static(path.join(__dirname, 'temp/Prompt')));",
+          "rationale": "Expertly serving static assets for debugging allows for remote visual verification of server-side state or generated files without manual downloading."
+        },
+        {
+          "id": 12, "difficulty": "Medium", "title": "Graceful DB Connectivity",
+          "problem": "Implement a MongoDB connection logic that checks for the URI's existence and logs a graceful warning instead of crashing if the database is missing.",
+          "snippet": "if (uri) { mongoose.connect(uri).catch(err => console.log('DB Offline:', err.message)); } else { console.log('No URI found, skipping...'); }",
+          "rationale": "Graceful degradation is an expert architectural standard that allows core API features to remain functional even when non-critical services (like DBs) are unreachable."
+        },
+        {
+          "id": 13, "difficulty": "Medium", "title": "Conditional CORS Mapping",
+          "problem": "Configure CORS middleware to dynamically allow origins based on environment variables or specific security criteria.",
+          "snippet": "app.use(cors({ origin: process.env.ALLOWED_ORIGIN || true, credentials: true }));",
+          "rationale": "Expertly managing CORS origins prevents 'wildcard' vulnerabilities while ensuring the frontend can securely communicate with the backend across different subdomains."
+        },
+        {
+          "id": 14, "difficulty": "Hard", "title": "Recursive Bundle Analysis",
+          "problem": "Design a 'debug-bundle' endpoint that asynchronously traverses the current working directory and returns a recursive JSON map of the file structure.",
+          "snippet": "async function listFiles(dir) {\n  const list = await fs.readdir(dir, { withFileTypes: true });\n  const results = [];\n  for (const f of list) {\n    const fullPath = path.resolve(dir, f.name);\n    results.push({ name: f.name, type: f.isDirectory() ? 'dir' : 'file', children: f.isDirectory() ? await listFiles(fullPath) : null });\n  }\n  return results;\n}",
+          "rationale": "Server-side introspection via recursive traversal is an expert debugging tool for auditing deployment packages and verifying presence of critical artifacts."
+        },
+        {
+          "id": 15, "difficulty": "Hard", "title": "CSP Iframe Hardening",
+          "problem": "Implement a Helmet Content Security Policy that restricts frame-ancestors to a specific list of trusted portfolio domains and the local host.",
+          "snippet": "app.use(helmet({ contentSecurityPolicy: { directives: { ...h.getDefaultDirectives(), 'frame-ancestors': [\"'self'\", \"https://my-portfolio.fyi\", \"http://localhost:3000\"] } } }));",
+          "rationale": "Hardening 'frame-ancestors' is an expert security requirement to prevent Clickjacking attacks when your application is embedded in a portfolio or another site."
         }
       ]
     },
@@ -180,6 +216,42 @@
           "problem": "Implement a global middleware that removes identifying metadata (like version info) from responses and sets a nosniff policy for resource types.",
           "snippet": "app.use((req, res, next) => {\n  res.setHeader('X-Content-Type-Options', 'nosniff');\n  res.removeHeader('X-Powered-By');\n  next();\n});",
           "rationale": "The 'nosniff' header is an expert security browser instruction that prevents MIME-type sniffing, a common vector for XSS attacks via file uploads."
+        },
+        {
+          "id": 10, "difficulty": "Easy", "title": "Auth Status verification",
+          "problem": "Create a route that returns the current authenticated user's data if a session exists, otherwise returning a 401 status.",
+          "snippet": "app.get('/api/user', (req, res) => {\n  if (req.isAuthenticated()) res.json(req.user);\n  else res.status(401).send();\n});",
+          "rationale": "Providing a dedicated status endpoint is an expert requirement for SPA frontends to verify login state without triggering a full page reload."
+        },
+        {
+          "id": 11, "difficulty": "Easy", "title": "Registration Login Chain",
+          "problem": "Implement a registration flow that automatically logs the user in immediately after successful account creation using Passport's `req.login` method.",
+          "snippet": "User.create(data).then(user => {\n  req.login(user, err => res.status(201).json(user));\n});",
+          "rationale": "Chaining registration to login is an expert UX standard that removes friction, allowing users to move from signup to their dashboard in a single step."
+        },
+        {
+          "id": 12, "difficulty": "Medium", "title": "Secure Token Generation",
+          "problem": "Use Node's native 'crypto' module to generate a cryptographically secure 20-character hex string for use as a temporary reset token.",
+          "snippet": "const token = crypto.randomBytes(20).toString('hex');",
+          "rationale": "Crypto-secure random bytes are an expert requirement for tokens, as standard `Math.random()` is predictable and vulnerable to brute-force attacks."
+        },
+        {
+          "id": 13, "difficulty": "Medium", "title": "Token Lifecycle Guard",
+          "problem": "Implement a route that finds a user by a reset token, ensuring the token matches and has not yet expired utilizing Mongoose's `$gt` operator.",
+          "snippet": "User.findOne({ resetToken: t, resetExpires: { $gt: Date.now() } });",
+          "rationale": "Enforcing temporal validity (expiration) on sensitive tokens is an expert security control that limits the window of opportunity for token exploitation."
+        },
+        {
+          "id": 14, "difficulty": "Hard", "title": "SameSite Cookie Hardening",
+          "problem": "Configure session cookies with 'SameSite=None' and 'Secure' attributes to ensure compatibility with cross-origin framing (iframes).",
+          "snippet": "app.use(session({ cookie: { sameSite: 'none', secure: true } }));",
+          "rationale": "Hardening cookies for cross-origin use is an expert requirement when your backend services embedded components or is hosted on a different primary domain."
+        },
+        {
+          "id": 15, "difficulty": "Hard", "title": "Timing-Safe Comparisons",
+          "problem": "Implement a token comparison using `crypto.timingSafeEqual` to prevent side-channel attacks that could leak information about the valid token.",
+          "snippet": "const match = crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(stored));",
+          "rationale": "Timing-safe comparisons are the expert defense against side-channel analysis, ensuring that the time taken to verify a token doesn't reveal how many characters were correct."
         }
       ]
     },
@@ -239,6 +311,42 @@
           "problem": "Implement a custom static method on the Student model that finds a student by email and returns an error if not found or unauthorized.",
           "snippet": "s.statics.findByEmail = function(email) {\n  return this.findOne({ email }).then(u => {\n    if(!u) throw new Error('Not Found'); return u;\n  });\n};",
           "rationale": "Extracting domain logic into `statics` is an expert architectural pattern that keeps controllers lean and business logic centralized at the data layer."
+        },
+        {
+          "id": 10, "difficulty": "Easy", "title": "Schema Role Enums",
+          "problem": "Define a Mongoose schema field for 'role' that only accepts 'user' or 'admin' and defaults to 'user' for new accounts.",
+          "snippet": "role: { type: String, enum: ['user', 'admin'], default: 'user' }",
+          "rationale": "Using `enum` at the schema level is an expert way to enforce data integrity and prevent invalid state transitions before they reach the database."
+        },
+        {
+          "id": 11, "difficulty": "Easy", "title": "Field Normalization Hooks",
+          "problem": "Configure an email field in a Mongoose schema to automatically trim whitespace and convert input to lowercase.",
+          "snippet": "email: { type: String, trim: true, lowercase: true }",
+          "rationale": "Automatic normalization (trim/lowercase) is an expert standard for ensuring query consistency and preventing duplicate accounts due to casing variations."
+        },
+        {
+          "id": 12, "difficulty": "Medium", "title": "Relational Array References",
+          "problem": "Implement a schema field 'savedHotels' that stores an array of ObjectIds referencing a 'Hotel' collection.",
+          "snippet": "savedHotels: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Hotel' }]",
+          "rationale": "Storing OID references in arrays is an expert pattern for implementing 'favorites' or 'bookmarks' without creating expensive JOIN tables common in relational DBs."
+        },
+        {
+          "id": 13, "difficulty": "Medium", "title": "Schema Instance Methods",
+          "problem": "Add a custom instance method to the user schema that utilizes bcrypt to compare a raw password string with the stored hash.",
+          "snippet": "s.methods.comparePass = function(p) { return bcrypt.compare(p, this.password); };",
+          "rationale": "Instance methods allow you to encapsulate logic tied to a specific document (like password verification), keeping your service layer clean and object-oriented."
+        },
+        {
+          "id": 14, "difficulty": "Hard", "title": "Temporal Token Modeling",
+          "problem": "Design a schema that includes a reset password token and an expiration date that automatically invalidates the token after 1 hour.",
+          "snippet": "resetToken: String, resetExpires: { type: Date, default: () => Date.now() + 3600000 }",
+          "rationale": "Explicitly modeling expiration via `Date.now()` offsets is an expert requirement for secure, one-time workflows like password resets or email verification."
+        },
+        {
+          "id": 15, "difficulty": "Hard", "title": "Deep Path Population",
+          "problem": "Perform a recursive populate operation that 'inflates' a user's saved list and then populates nested 'author' objects within those items.",
+          "snippet": "User.findById(id).populate({ path: 'savedHotels', populate: { path: 'manager', select: 'name' } });",
+          "rationale": "Nested population is an expert technique for retrieving complex tree-structures in a single database round-trip, significantly reducing API latency."
         }
       ]
     },
@@ -357,6 +465,42 @@
           "problem": "Explain the logic of 'multi: true' in providers. How does this allow a framework to aggregate multiple configuration objects into a single injection?",
           "snippet": "{ provide: HTTP_INTERCEPTORS, useClass: MyInt, multi: true }",
           "rationale": "Multi-providers enable an expert 'Pluggable Architecture' where different features can register their own logic into a central service without knowing about each other."
+        },
+        {
+          "id": 10, "difficulty": "Easy", "title": "Signal Initialization Logic",
+          "problem": "Implement a Signal that initializes its value from localStorage if available, otherwise defaulting to a fallback string.",
+          "snippet": "val = signal(localStorage.getItem('key') || 'default');",
+          "rationale": "Initializing signals directly from persistence layers is an expert way to ensure UI state consistency across page refreshes without needing manual lifecycle hooks."
+        },
+        {
+          "id": 11, "difficulty": "Easy", "title": "Declarative Routing Links",
+          "problem": "Use the RouterLink directive in a standalone component's template to navigate to a dynamic 'details' path using an ID from the model.",
+          "snippet": "<a [routerLink]=\"['/details', item.id]\">View</a>",
+          "rationale": "Expert Angular navigation utilizes array-based router links for type safety and easy parameter injection, avoiding manual router navigation in the logic class."
+        },
+        {
+          "id": 12, "difficulty": "Medium", "title": "Functional Service Injection",
+          "problem": "Demonstrate the use of the `inject()` function to retrieve a service instance without using the traditional class constructor.",
+          "snippet": "private api = inject(ApiService);",
+          "rationale": "The `inject()` function is the modern expert standard for dependency injection, allowing for cleaner class structures and the use of services in functional guards or initializers."
+        },
+        {
+          "id": 13, "difficulty": "Medium", "title": "Signal Persistence Effects",
+          "problem": "Implement an `effect()` that automatically synchronizes a signal's value to localStorage whenever it changes, ensuring reactive persistence.",
+          "snippet": "effect(() => localStorage.setItem('pref', this.pref()));",
+          "rationale": "Using `effect` for persistence is an expert pattern that decouples the UI state modification from the side-effect of data storage, keeping controllers focused on logic."
+        },
+        {
+          "id": 14, "difficulty": "Hard", "title": "Reactive Canvas Lifecycles",
+          "problem": "Use a Signal effect combined with a viewChild template reference to trigger a canvas 'clear' operation whenever the data model resets.",
+          "snippet": "effect(() => { if (!this.data()) this.canvas()?.nativeElement.getContext('2d').clearRect(0,0,500,500); });",
+          "rationale": "Managing non-Angular DOM elements (like Canvas) within Signal effects is an expert technique for synchronizing complex imperative APIs with reactive application state."
+        },
+        {
+          "id": 15, "difficulty": "Hard", "title": "HostListener Event Filtering",
+          "problem": "Implement a HostListener that detects clicks outside of a specific dropdown container to close it, utilizing standard DOM 'closest' logic.",
+          "snippet": "@HostListener('document:click', ['$event']) onClick(e) { if (!e.target.closest('.drop')) this.isOpen.set(false); }",
+          "rationale": "Global event listeners with targeted filtering are an expert requirement for building accessible, interactive UI components like modals or context menus."
         }
       ]
     },
