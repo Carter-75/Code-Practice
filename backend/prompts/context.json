@@ -6,6 +6,65 @@
     "last_updated": "2026-04-09"
   },
   "curriculum": {
+    "typescript": {
+      "metadata": { "name": "TypeScript", "color": "#3178C6" },
+      "topics": [
+        {
+          "id": 1, "difficulty": "Easy", "title": "Interface Modeling",
+          "problem": "Define a TypeScript interface for a 'Hotel' that includes mandatory fields for 'id' and 'name', and an optional 'description'.",
+          "snippet": "interface Hotel { id: string; name: string; description?: string; }",
+          "rationale": "Interfaces are the expert foundation of TypeScript, allowing for clear contracts between the API response and the UI components."
+        },
+        {
+          "id": 2, "difficulty": "Easy", "title": "Literal Union Types",
+          "problem": "Create a type for 'UserRole' that only permits the specific string literals 'admin' or 'user'.",
+          "snippet": "type UserRole = 'admin' | 'user';",
+          "rationale": "Literal unions provide expert-level compile-time safety, preventing invalid strings from being assigned to critical state variables (like permissions)."
+        },
+        {
+          "id": 3, "difficulty": "Easy", "title": "Array and Tuple Typing",
+          "problem": "Explicitly type a Signal that holds an array of hotel objects, ensuring TypeScript can provide autocomplete for individual items.",
+          "snippet": "hotels = signal<Hotel[]>([]);",
+          "rationale": "Strictly typing signals with generic array markers ensures that all downstream reactive logic (like effects or computed) is type-safe."
+        },
+        {
+          "id": 4, "difficulty": "Medium", "title": "Generic Service Wrappers",
+          "problem": "Construct a generic 'getData' method in a service that takes a type parameter T and returns an Observable of that type.",
+          "snippet": "getData<T>(endpoint: string): Observable<T> { return this.http.get<T>(endpoint); }",
+          "rationale": "Generics are an expert requirement for reusable logic, allowing a single method to fetch and type-cast diverse data structures correctly."
+        },
+        {
+          "id": 5, "difficulty": "Medium", "title": "Partial Utility types",
+          "problem": "Use the 'Partial' utility type to define a function that accepts only a subset of Hotel properties for an update operation.",
+          "snippet": "updateHotel(id: string, updates: Partial<Hotel>) { ... }",
+          "rationale": "Utility types like `Partial` are an expert standard for modeling PATCH operations where only a few fields are being modified at once."
+        },
+        {
+          "id": 6, "difficulty": "Medium", "title": "Type Assertions (as)",
+          "problem": "Demonstrate how to cast an environment string to a specific literal type to enable strict boolean checks in development mode.",
+          "snippet": "const isProd = (env as string) === 'true';",
+          "rationale": "Type assertions allow experts to bridge the gap between loosely typed environment variables and strictly typed application logic."
+        },
+        {
+          "id": 7, "difficulty": "Hard", "title": "Discriminated Unions",
+          "problem": "Implement a state type that uses a 'type' field to distinguish between 'Loading', 'Success', and 'Error' states, each with its own data metadata.",
+          "snippet": "type State = { type: 'loading' } | { type: 'success', data: any } | { type: 'error', msg: string };",
+          "rationale": "Discriminated unions are an expert pattern for modeling complex application states, ensuring you cannot access 'data' while in a 'loading' state."
+        },
+        {
+          "id": 8, "difficulty": "Hard", "title": "Generic Constraints (extends)",
+          "problem": "Create a generic function that only accepts objects that possess an 'id' attribute of type string.",
+          "snippet": "function logId<T extends { id: string }>(obj: T) { console.log(obj.id); }",
+          "rationale": "Generic constraints provide an expert way to create reusable functions that rely on specific object shapes without losing type specificity."
+        },
+        {
+          "id": 9, "difficulty": "Hard", "title": "Indexed Access Types",
+          "problem": "Extract the type of a specific property from a complex 'Hotel' interface using indexed access notation.",
+          "snippet": "type HotelName = Hotel['name'];",
+          "rationale": "Indexed access types enable expert 'single source of truth' typing, ensuring that if an interface changes, all dependent types update automatically."
+        }
+      ]
+    },
     "javascript": {
       "metadata": { "name": "Javascript", "color": "#F7DF1E" },
       "topics": [
