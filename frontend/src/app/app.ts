@@ -5,6 +5,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { ApiService, QuestionResult, EvaluationResult } from './services/api.service';
 import anime from 'animejs';
 import confetti from 'canvas-confetti';
+import * as Matter from 'matter-js';
 
 @Component({
   selector: 'app-root',
@@ -190,6 +191,73 @@ export class App implements AfterViewInit {
         alert('AI Consensus: ' + res.message);
       },
       error: () => this.isLoading.set(false)
+    });
+  }
+
+  // Physics Explosion Logic
+  public explodePhysicsObjects() {
+    const canvas = document.createElement('canvas');
+    canvas.style.position = 'fixed';
+    canvas.style.inset = '0';
+    canvas.style.pointerEvents = 'none';
+    canvas.style.zIndex = '9999';
+    document.body.appendChild(canvas);
+
+    const engine = Matter.Engine.create();
+    const render = Matter.Render.create({
+      canvas: canvas,
+      engine: engine,
+      options: {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        background: 'transparent',
+        wireframes: false
+      }
+    });
+
+    const bodies = [];
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+
+    for (let i = 0; i < 20; i++) {
+      const x = centerX + (Math.random() - 0.5) * 50;
+      const y = centerY + (Math.random() - 0.5) * 50;
+      const size = Math.random() * 20 + 10;
+      
+      const body = i % 2 === 0 
+        ? Matter.Bodies.circle(x, y, size / 2, {
+            render: { fillStyle: i % 3 === 0 ? '#818cf8' : '#c084fc' }
+          })
+        : Matter.Bodies.rectangle(x, y, size, size, {
+            render: { fillStyle: i % 3 === 1 ? '#f472b6' : '#6366f1' }
+          });
+
+      const force = {
+        x: (Math.random() - 0.5) * 0.1,
+        y: (Math.random() - 0.7) * 0.1
+      };
+      
+      Matter.Body.applyForce(body, body.position, force);
+      bodies.push(body);
+    }
+
+    Matter.World.add(engine.world, bodies);
+    Matter.Render.run(render);
+    const runner = Matter.Runner.create();
+    Matter.Runner.run(runner, engine);
+
+    // Fade out and cleanup
+    anime({
+      targets: canvas,
+      opacity: [1, 0],
+      duration: 3000,
+      easing: 'easeInQuad',
+      complete: () => {
+        Matter.Render.stop(render);
+        Matter.Engine.clear(engine);
+        render.canvas.remove();
+        render.textures = {};
+      }
     });
   }
 
