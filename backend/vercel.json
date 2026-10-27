@@ -1,22 +1,21 @@
 {
   "version": 2,
   "functions": {
-    "app.js": {
+    "api/index.js": {
       "maxDuration": 60,
-      "includeFiles": "{services,prompts,models,controllers,routes}/**"
+      "includeFiles": "prompts/**"
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "app.js" }
+    { "source": "/(.*)", "destination": "/api/index.js" }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Frame-Options", "value": "ALLOWALL" },
-        { 
-          "key": "Content-Security-Policy", 
-          "value": "frame-ancestors 'self' https://carter-portfolio.fyi https://carter-portfolio.vercel.app https://*.vercel.app http://localhost:3000" 
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'self' https://carter-portfolio.fyi https://www.carter-portfolio.fyi https://carter-portfolio.vercel.app https://*.vercel.app http://localhost:3000"
         }
       ]
     }
