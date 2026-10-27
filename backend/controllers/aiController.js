@@ -8,8 +8,9 @@ const getSafePath = (relativePath) => {
   const base = process.cwd();
   const isVercel = process.env.VERCEL === '1' || process.env.PRODUCTION === 'true';
   const isWritable = relativePath.includes('extracted_patterns') || relativePath.includes('evolution_rules');
-  
-  // 1. Production Writable Redirect
+
+  // 1. Production Writable Redirect: the deployed filesystem is read-only,
+  // so runtime-written files live in /tmp (ephemeral per instance).
   if (isVercel && isWritable) {
     return path.join('/tmp', path.basename(relativePath));
   }
@@ -26,20 +27,16 @@ const getSafePath = (relativePath) => {
     try {
       const fsSync = require('fs');
       if (fsSync.existsSync(candidate)) {
-        console.log(`OK: Resolved Resource Path: [${candidate}]`);
         return candidate;
       }
     } catch (e) { /* continue */ }
   }
-
-  console.warn(`WARN: Resource Not Found in Candidates. Falling back to: [${candidates[0]}]`);
 
   // Fallback to primary if nothing found (will throw explicit error on read)
   return candidates[0];
 };
 
 async function readFileSafe(targetPath) {
-  // Direct read, no fallback logic
   try {
     return await fs.readFile(targetPath, 'utf-8');
   } catch (e) {
@@ -57,10 +54,6 @@ const PATHS = {
 async function getContext() {
   const data = await readFileSafe(PATHS.context);
   return JSON.parse(data);
-}
-
-async function saveContext(context) {
-  await fs.writeFile(PATHS.context, JSON.stringify(context, null, 2));
 }
 
 async function getEvolutionRules() {
@@ -82,41 +75,72 @@ async function getPrompt(filename) {
   return await readFileSafe(targetPath);
 }
 
-// Utility to check for API key
-const checkApiKey = (res) => {
-  if (!process.env.OPENAI_API_KEY) {
-    console.error('ERROR: OPENAI_API_KEY is missing from the Environment Vault!');
-    res.status(500).json({
-      error: 'Vault Error: OpenAI API Key is missing from Vercel Environment Variables.'
-    });
+// The AI features need a server-side OpenAI key. When it is missing or the
+// provider rejects it, the API answers honestly instead of forwarding raw
+// provider errors (which can contain key fragments and account links).
+const AI_UNAVAILABLE = 'AI features are unavailable right now: the server OpenAI key is missing or was rejected. Everything else on the site still works. Set a valid OPENAI_API_KEY in the backend environment to restore AI questions and grading.';
+const AI_FAILED = 'The AI service could not complete that request. Please try again.';
+const AI_BAD_RESPONSE = 'The AI returned an unreadable response. Please try again.';
+
+function aiErrorStatus(err) {
+  if (err && err.code === 'AI_NOT_CONFIGURED') return 503;
+  if (err && (err.status === 401 || err.status === 403)) return 503;
+  return 502;
+}
+
+function sendAiError(res, err, contextLabel) {
+  console.error(`${contextLabel}:`, err && err.message ? err.message : err);
+  const status = aiErrorStatus(err);
+  res.status(status).json({ error: status === 503 ? AI_UNAVAILABLE : AI_FAILED });
+}
+
+function requireAiConfigured(res) {
+  if (!openaiService.isConfigured()) {
+    res.status(503).json({ error: AI_UNAVAILABLE });
     return false;
   }
   return true;
-};
+}
+
+function parseAiJson(aiResponse) {
+  const jsonMatch = aiResponse && aiResponse.match(/\{[\s\S]*\}/);
+  const cleanJson = jsonMatch ? jsonMatch[0] : aiResponse;
+  return JSON.parse(cleanJson);
+}
+
+const VALID_DIFFICULTIES = ['easy', 'medium', 'hard'];
 
 exports.generateNewQuestion = async (req, res) => {
-  if (!checkApiKey(res)) return;
-  const difficulty = req.query.difficulty || 'medium';
-  const selectedLangs = req.query.languages ? req.query.languages.split(',') : ['javascript', 'python', 'java'];
+  if (!requireAiConfigured(res)) return;
+  const difficulty = String(req.query.difficulty || 'medium').toLowerCase();
+  if (!VALID_DIFFICULTIES.includes(difficulty)) {
+    return res.status(400).json({ error: `Invalid difficulty. Use one of: ${VALID_DIFFICULTIES.join(', ')}.` });
+  }
 
   try {
     const context = await getContext();
+    const knownLangs = Object.keys(context.curriculum);
+    let selectedLangs = req.query.languages ? req.query.languages.split(',').map(s => s.trim()).filter(Boolean) : ['javascript', 'python', 'java'];
+    const invalid = selectedLangs.filter(l => !knownLangs.includes(l));
+    if (invalid.length > 0) {
+      return res.status(400).json({ error: `Unknown topic(s): ${invalid.join(', ')}. Available topics: ${knownLangs.join(', ')}.` });
+    }
+    if (selectedLangs.length === 0) selectedLangs = ['javascript', 'python', 'java'];
+
     const systemInstruction = await getPrompt('questionPrompt.txt');
 
     // Build a flat list of all allowed topics across selected languages
     let pool = [];
     selectedLangs.forEach(lang => {
-      if (context.curriculum[lang]) {
-        const domain = context.curriculum[lang];
-        const filtered = domain.topics.filter(t => t.difficulty.toLowerCase() === difficulty.toLowerCase());
-        filtered.forEach(topic => {
-          pool.push({ ...topic, domain: lang });
-        });
-      }
+      const domain = context.curriculum[lang];
+      const filtered = domain.topics.filter(t => t.difficulty.toLowerCase() === difficulty);
+      filtered.forEach(topic => {
+        pool.push({ ...topic, domain: lang });
+      });
     });
 
     if (pool.length === 0) {
-      throw new Error(`No ${difficulty} topics found for selected categories: ${selectedLangs.join(', ')}`);
+      return res.status(404).json({ error: `No ${difficulty} topics found for selected categories: ${selectedLangs.join(', ')}` });
     }
 
     // Pick one random topic as the specific context for this generation
@@ -139,25 +163,25 @@ exports.generateNewQuestion = async (req, res) => {
 
     const fullPrompt = `
       ${systemInstruction}
-      
+
       ### PRIVATE CALIBRATION REFERENCE (DO NOT ECHO ANY OF THIS TO THE STUDENT)
       DOMAIN: ${selectedTopic.domain.toUpperCase()}
       TOPIC SKILL: ${selectedTopic.title}
       DIFFICULTY TIER: ${selectedTopic.difficulty}
-      REFERENCE_PROBLEM (PRIVATE — DO NOT REUSE OR REPHRASE): ${selectedTopic.problem}
-      REFERENCE_SNIPPET (PRIVATE — DO NOT REUSE AS SOLUTION): ${selectedTopic.snippet}
+      REFERENCE_PROBLEM (PRIVATE - DO NOT REUSE OR REPHRASE): ${selectedTopic.problem}
+      REFERENCE_SNIPPET (PRIVATE - DO NOT REUSE AS SOLUTION): ${selectedTopic.snippet}
       UNDERLYING_PRINCIPLE: ${selectedTopic.rationale}
-      
+
       ### TARGET MODALITY
       ${modalityGuidance}
-      
+
       ### VISUAL AID POLICY
       ${visualAidInstruction}
-      
+
       ### SYSTEM CONTEXT & RULES
       CURATED RULES: ${JSON.stringify(context.ai_rules)}
       ADAPTIVE EVOLUTION RULES: ${JSON.stringify(evolutionData.rules)}
-      
+
       ### YOUR MISSION
       Using the PRIVATE CALIBRATION REFERENCE above as a skill-level anchor ONLY:
       1. Understand the UNDERLYING_PRINCIPLE being tested.
@@ -169,19 +193,21 @@ exports.generateNewQuestion = async (req, res) => {
     `;
 
     const aiResponse = await openaiService.getChatCompletion(fullPrompt);
-    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-    const cleanJson = jsonMatch ? jsonMatch[0] : aiResponse;
-
-    const result = JSON.parse(cleanJson);
+    let result;
+    try {
+      result = parseAiJson(aiResponse);
+    } catch (e) {
+      console.error('Generation JSON parse failed');
+      return res.status(502).json({ error: AI_BAD_RESPONSE });
+    }
 
     // DALL-E Integration: Only if necessary (explicit prompt from AI)
     if (result.dallePrompt) {
       try {
-        const promptForIm = result.dallePrompt || `A simple, hand-drawn whiteboard diagram illustrating ${result.title} curriculum.`;
-        const imageUrl = await openaiService.generateImage(promptForIm);
+        const imageUrl = await openaiService.generateImage(result.dallePrompt);
         result.imageUrl = imageUrl;
       } catch (imgError) {
-        console.error('Image Generation Failed:', imgError);
+        console.error('Image Generation Failed:', imgError && imgError.message ? imgError.message : imgError);
       }
     }
 
@@ -190,15 +216,32 @@ exports.generateNewQuestion = async (req, res) => {
       result.problem = JSON.stringify(result.problem, null, 2);
     }
 
+    // Never ship the answer key to the browser: the generated solution and
+    // its explanation would let anyone read the correct answer before
+    // submitting. Grading re-derives correctness on the server instead.
+    delete result.solution;
+    delete result.explanation;
+    delete result.dallePrompt;
+
     res.json(result);
   } catch (error) {
-    console.error('Generation Error:', error);
-    res.status(500).json({ error: error.message });
+    sendAiError(res, error, 'Generation Error');
   }
 };
 
 exports.evaluateSolution = async (req, res) => {
-  const { question, userCode, type } = req.body;
+  if (!requireAiConfigured(res)) return;
+  const { question, userCode, type, options, title } = req.body || {};
+
+  if (typeof question !== 'string' || question.trim() === '') {
+    return res.status(400).json({ error: 'A question is required to evaluate a submission.' });
+  }
+  if (typeof userCode !== 'string' || userCode.trim() === '') {
+    return res.status(400).json({ error: 'A submission is required. Answer the question before requesting a review.' });
+  }
+  if (type === 'mcq' && (!Array.isArray(options) || options.length === 0)) {
+    return res.status(400).json({ error: 'MCQ submissions must include the answer options so the selected index can be graded.' });
+  }
 
   try {
     const [systemInstruction, context, questionPrompt, evolutionData] = await Promise.all([
@@ -209,26 +252,34 @@ exports.evaluateSolution = async (req, res) => {
     ]);
 
     // Determine if we have a visual submission (drawing)
-    const isImage = typeof userCode === 'string' && userCode.startsWith('data:image');
+    const isImage = userCode.startsWith('data:image');
 
     const visualAidInstruction = "REMINDER: DO NOT provide a dallePrompt unless you are providing a mandatory reference diagram for analysis. If no technical diagram is strictly necessary for the explanation, omit the dallePrompt entirely. Decorative/abstract images are strictly forbidden.";
+
+    const optionsBlock = type === 'mcq'
+      ? `\n      ANSWER OPTIONS (the student submission is the index of the chosen option): ${JSON.stringify(options)}`
+      : '';
 
     const prompt = `
       ${systemInstruction}
       QUESTION TYPE: ${type || 'code'}
+      QUESTION TITLE: ${typeof title === 'string' ? title : ''}
       CHALLENGE CONTEXT: ${questionPrompt}
       CURATED RULES: ${JSON.stringify(context.ai_rules)}
       ADAPTIVE EVOLUTION RULES: ${JSON.stringify(evolutionData.rules)}
       VISUAL AID POLICY: ${visualAidInstruction}
-      THE SPECIFIC CHALLENGE: ${question}
+      THE SPECIFIC CHALLENGE: ${question}${optionsBlock}
       STUDENT SUBMISSION: ${isImage ? '[VISUAL SKETCH ATTACHED]' : userCode}
     `;
 
     const aiResponse = await openaiService.getChatCompletion(prompt, isImage ? userCode : null);
-    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-    const cleanJson = jsonMatch ? jsonMatch[0] : aiResponse;
-
-    const result = JSON.parse(cleanJson);
+    let result;
+    try {
+      result = parseAiJson(aiResponse);
+    } catch (e) {
+      console.error('Evaluation JSON parse failed');
+      return res.status(502).json({ error: AI_BAD_RESPONSE });
+    }
 
     // DALL-E Integration for Evaluation Visuals
     if (result.dallePrompt) {
@@ -236,8 +287,9 @@ exports.evaluateSolution = async (req, res) => {
         const visualAidUrl = await openaiService.generateImage(result.dallePrompt);
         result.visualAidUrl = visualAidUrl;
       } catch (imgError) {
-        console.error('Feedback Image Generation Failed:', imgError);
+        console.error('Feedback Image Generation Failed:', imgError && imgError.message ? imgError.message : imgError);
       }
+      delete result.dallePrompt;
     }
 
     try {
@@ -254,7 +306,8 @@ exports.evaluateSolution = async (req, res) => {
         timestamp: new Date().toISOString(),
         type: 'resolved_session',
         question: question,
-        user_submission: userCode,
+        // Never persist raw drawing uploads (multi-megabyte data URLs)
+        user_submission: isImage ? '[VISUAL SKETCH]' : userCode,
         modality: type,
         feedback: result
       });
@@ -265,18 +318,19 @@ exports.evaluateSolution = async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    console.error('Evaluation Error:', error);
-    res.status(500).json({ error: error.message });
+    sendAiError(res, error, 'Evaluation Error');
   }
 };
 
-exports.skipQuestion = async (req, res) => {
-  // Logic to track skipped questions can be added here
-  res.json({ status: 'skipped' });
-};
-
 exports.submitFeedback = async (req, res) => {
-  const { feedback } = req.body;
+  if (!requireAiConfigured(res)) return;
+  const { feedback } = req.body || {};
+  if (typeof feedback !== 'string' || feedback.trim() === '') {
+    return res.status(400).json({ error: 'Feedback text is required.' });
+  }
+  if (feedback.length > 2000) {
+    return res.status(400).json({ error: 'Feedback is too long (2000 characters max).' });
+  }
 
   try {
     const dirToRead = getSafePath('prompts');
@@ -291,23 +345,26 @@ exports.submitFeedback = async (req, res) => {
       })
     );
 
-    // Fetch last session for specific evaluation context
+    // Fetch last session for specific evaluation context. Read through the
+    // same resolved path used for writes: on the deployed (read-only)
+    // filesystem that is the /tmp copy, not the bundled original.
     let lastSession = "No recent session data available.";
     try {
-      const EXTR_PATH = path.join(__dirname, '../prompts/extracted_patterns.json');
-      const fileContent = await fs.readFile(EXTR_PATH, 'utf-8');
-      const data = JSON.parse(fileContent);
-      if (data.extracted_lessons && data.extracted_lessons.length > 0) {
-        lastSession = JSON.stringify(data.extracted_lessons[data.extracted_lessons.length - 1]);
+      const fileContent = await readFileSafe(PATHS.extracted);
+      if (fileContent) {
+        const data = JSON.parse(fileContent);
+        if (data.extracted_lessons && data.extracted_lessons.length > 0) {
+          lastSession = JSON.stringify(data.extracted_lessons[data.extracted_lessons.length - 1]);
+        }
       }
     } catch (e) { /* ignore */ }
 
     const reflectionInstruction = `
       YOU ARE THE EXPERT TUTOR SELF-EVOLUTION ENGINE.
-      
+
       THE USER HAS PROVIDED CRITIQUE/FEEDBACK ON YOUR RECENT PERFORMANCE.
       USER FEEDBACK: "${feedback}"
-      
+
       CONTEXT OF LAST SESSION:
       ${lastSession}
 
@@ -320,39 +377,41 @@ exports.submitFeedback = async (req, res) => {
       3. Generate a SINGLE, CONCISE system adjustment rule (max 2 sentences).
       4. Paraphrase the user's original feedback into a short, clear summary (max 1 sentence).
       5. Return a JSON object with two keys: "new_rule" and "paraphrased_feedback".
-      
+
       RETURN ONLY THE JSON.
     `;
 
     const aiResponse = await openaiService.getChatCompletion(reflectionInstruction);
-    const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
-
-    if (jsonMatch) {
-      const result = JSON.parse(jsonMatch[0]);
-      const newRule = result.new_rule;
-      const paraphrasedFeedback = result.paraphrased_feedback || feedback;
-
-      // Update evolution_rules.json instead of context.json
-      const evolutionData = await getEvolutionRules();
-      if (!evolutionData.rules) evolutionData.rules = [];
-
-      evolutionData.rules.push({
-        timestamp: new Date().toISOString(),
-        feedback_received: paraphrasedFeedback,
-        evolution_rule: newRule
-      });
-
-      // Keep last 10 rules
-      if (evolutionData.rules.length > 10) evolutionData.rules.shift();
-
-      await saveEvolutionRules(evolutionData);
-      res.json({ message: newRule, status: 'success' });
-    } else {
-      throw new Error('AI failed to generate a refinement rule.');
+    let result;
+    try {
+      result = parseAiJson(aiResponse);
+    } catch (e) {
+      return res.status(502).json({ error: AI_BAD_RESPONSE });
     }
+
+    const newRule = result.new_rule;
+    const paraphrasedFeedback = result.paraphrased_feedback || feedback;
+    if (!newRule) {
+      return res.status(502).json({ error: AI_BAD_RESPONSE });
+    }
+
+    // Update evolution_rules.json instead of context.json
+    const evolutionData = await getEvolutionRules();
+    if (!evolutionData.rules) evolutionData.rules = [];
+
+    evolutionData.rules.push({
+      timestamp: new Date().toISOString(),
+      feedback_received: paraphrasedFeedback,
+      evolution_rule: newRule
+    });
+
+    // Keep last 10 rules
+    if (evolutionData.rules.length > 10) evolutionData.rules.shift();
+
+    await saveEvolutionRules(evolutionData);
+    res.json({ message: newRule, status: 'success' });
   } catch (error) {
-    console.error('Feedback Reflection Error:', error);
-    res.status(500).json({ error: 'Failed to evolve from feedback.' });
+    sendAiError(res, error, 'Feedback Reflection Error');
   }
 };
 
@@ -368,6 +427,7 @@ exports.getAvailableLanguages = async (req, res) => {
 
     res.json(sortedLangs);
   } catch (error) {
+    console.error('Languages Error:', error);
     res.status(500).json({ error: 'Failed to fetch languages' });
   }
 };

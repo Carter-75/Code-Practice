@@ -1,14 +1,1 @@
-{
-  "cleanUrls": true,
-  "trailingSlash": false,
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://code-practice-backend.vercel.app/api/:path*"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
-}
+{"cleanUrls":true,"headers":[{"headers":[{"key":"Content-Security-Policy","value":"frame-ancestors 'self' https://carter-portfolio.fyi https://www.carter-portfolio.fyi https://carter-portfolio.vercel.app"}],"source":"/(.*)"}],"rewrites":[{"destination":"https://code-practice-backend.vercel.app/api/:path*","source":"/api/:path*"},{"destination":"/index.html","source":"/(.*)"}],"trailingSlash":false}

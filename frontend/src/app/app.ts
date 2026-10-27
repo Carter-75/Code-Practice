@@ -25,6 +25,15 @@ export class App implements AfterViewInit {
   userCode = signal('');
   feedback = signal<EvaluationResult | null>(null);
   isLoading = signal(false);
+  errorMessage = signal<string | null>(null);
+
+  // Surface backend failures to the user instead of failing silently in the
+  // console (for example when the AI service is not configured on the server).
+  private showError(err: any, fallback: string) {
+    const message = err?.error?.error || err?.error?.message || fallback;
+    this.errorMessage.set(message);
+    this.isLoading.set(false);
+  }
   
   // Feedback System
   userFeedbackText = signal('');
@@ -66,16 +75,22 @@ export class App implements AfterViewInit {
   }
 
   loadAvailableLanguages() {
-    this.apiService.getData<string[]>('ai/languages').subscribe(langs => {
-      this.allLanguages.set(langs);
-      
-      // Clean up orphaned topics from localStorage
-      const currentSelected = this.selectedLanguages();
-      const validSelected = currentSelected.filter(lang => langs.includes(lang));
-      
-      if (currentSelected.length !== validSelected.length) {
-        this.selectedLanguages.set(validSelected);
-        this.onLanguagesChange();
+    this.apiService.getData<string[]>('ai/languages').subscribe({
+      next: (langs) => {
+        this.allLanguages.set(langs);
+
+        // Clean up orphaned topics from localStorage
+        const currentSelected = this.selectedLanguages();
+        const validSelected = currentSelected.filter(lang => langs.includes(lang));
+
+        if (currentSelected.length !== validSelected.length) {
+          this.selectedLanguages.set(validSelected);
+          this.onLanguagesChange();
+        }
+      },
+      error: (err) => {
+        console.error(err);
+        this.errorMessage.set('Could not load the topic list from the server. Question generation may be unavailable.');
       }
     });
   }
@@ -104,6 +119,7 @@ export class App implements AfterViewInit {
     if (this.isLoading()) return;
     
     this.isLoading.set(true);
+    this.errorMessage.set(null);
     this.feedback.set(null);
     this.userCode.set('');
     this.showReferenceImage.set(false);
@@ -123,7 +139,7 @@ export class App implements AfterViewInit {
       },
       error: (err) => {
         console.error(err);
-        this.isLoading.set(false);
+        this.showError(err, 'Could not generate a question. Please try again.');
       }
     });
   }
@@ -165,14 +181,23 @@ export class App implements AfterViewInit {
     }
 
     this.isLoading.set(true);
-    this.apiService.postData<EvaluationResult>('ai/check', { question: this.question()!.problem, userCode: submission, type: this.question()!.type }).subscribe({
+    this.errorMessage.set(null);
+    // Send the full question context: for MCQ questions the evaluator needs
+    // the options, otherwise it cannot know what the selected index means.
+    this.apiService.postData<EvaluationResult>('ai/check', {
+      question: this.question()!.problem,
+      title: this.question()!.title,
+      options: this.question()!.options,
+      userCode: submission,
+      type: this.question()!.type
+    }).subscribe({
       next: (res) => {
         this.feedback.set(res);
         this.isLoading.set(false);
       },
       error: (err) => {
         console.error(err);
-        this.isLoading.set(false);
+        this.showError(err, 'Could not evaluate your submission. Please try again.');
       }
     });
   }
@@ -182,6 +207,7 @@ export class App implements AfterViewInit {
     if (!this.userFeedbackText()) return;
     
     this.isLoading.set(true);
+    this.errorMessage.set(null);
     this.apiService.postData<any>('ai/feedback', { feedback: this.userFeedbackText() }).subscribe({
       next: (res) => {
         this.userFeedbackText.set('');
@@ -190,7 +216,10 @@ export class App implements AfterViewInit {
         this.explodePhysicsObjects();
         alert('AI Consensus: ' + res.message);
       },
-      error: () => this.isLoading.set(false)
+      error: (err) => {
+        console.error(err);
+        this.showError(err, 'Could not submit feedback. Please try again.');
+      }
     });
   }
 

@@ -1,17 +1,23 @@
 const { OpenAI } = require('openai');
 
-function getOpenAIClient() {
-  require('dotenv').config({ path: require('path').join(process.cwd(), '.env.local') });
-  if (!process.env.OPENAI_API_KEY) {
-    require('dotenv').config({ path: require('path').join(process.cwd(), 'backend', '.env.local') });
-  }
-  
-  if (!process.env.OPENAI_API_KEY) {
-    console.error('CRITICAL: OPENAI_API_KEY is not defined in the environment.');
-  }
+// The API key is loaded once by backend/app.js (dotenv, repo-root .env.local)
+// or from the hosting platform's environment variables. This service never
+// reads env files itself and never exposes provider error details to callers:
+// controller code maps failures to honest, generic messages.
+function isConfigured() {
+  return Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.trim());
+}
 
+function getOpenAIClient() {
+  if (!isConfigured()) {
+    const err = new Error('OpenAI API key is not configured on the server.');
+    err.code = 'AI_NOT_CONFIGURED';
+    throw err;
+  }
   return new OpenAI({
-    apiKey: (process.env.OPENAI_API_KEY || '').trim(),
+    apiKey: process.env.OPENAI_API_KEY.trim(),
+    timeout: 60000,
+    maxRetries: 1,
   });
 }
 
@@ -20,49 +26,40 @@ function getOpenAIClient() {
  * Supports multi-modal inputs (text + images).
  */
 async function getChatCompletion(prompt, imageUrl = null) {
-  try {
-    const content = [{ type: "text", text: prompt }];
+  const content = [{ type: "text", text: prompt }];
 
-    if (imageUrl) {
-      content.push({
-        type: "image_url",
-        image_url: { url: imageUrl },
-      });
-    }
-
-    const client = getOpenAIClient();
-    const response = await client.chat.completions.create({
-      model: "gpt-4o",
-      messages: [{ role: "user", content: content }],
-      temperature: 0.7,
+  if (imageUrl) {
+    content.push({
+      type: "image_url",
+      image_url: { url: imageUrl },
     });
-    return response.choices[0].message.content;
-  } catch (error) {
-    console.error('OpenAI API Error:', error);
-    throw new Error(`AI Service Error: ${error.message}`);
   }
+
+  const client = getOpenAIClient();
+  const response = await client.chat.completions.create({
+    model: "gpt-4o",
+    messages: [{ role: "user", content: content }],
+    temperature: 0.7,
+  });
+  return response.choices[0].message.content;
 }
 
 /**
  * Generates an image using DALL-E 3 and returns the URL.
  */
 async function generateImage(prompt) {
-  try {
-    const client = getOpenAIClient();
-    const response = await client.images.generate({
-      model: "dall-e-3",
-      prompt: prompt,
-      n: 1,
-      size: "1024x1024",
-    });
-    return response.data[0].url;
-  } catch (error) {
-    console.error('DALL-E API Error:', error);
-    throw new Error(`Visual Service Error: ${error.message}`);
-  }
+  const client = getOpenAIClient();
+  const response = await client.images.generate({
+    model: "dall-e-3",
+    prompt: prompt,
+    n: 1,
+    size: "1024x1024",
+  });
+  return response.data[0].url;
 }
 
 module.exports = {
+  isConfigured,
   getChatCompletion,
   generateImage,
 };

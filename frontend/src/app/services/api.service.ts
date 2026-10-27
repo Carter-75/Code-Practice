@@ -12,8 +12,9 @@ export interface QuestionResult {
   imageUrl?: string;
   options?: string[];
   initialCode?: string;
-  solution?: string | number;
-  explanation?: string;
+  // Note: the backend deliberately strips the generated solution and its
+  // explanation from question responses so the answer key never reaches
+  // the browser before a submission is graded.
 }
 
 export interface EvaluationResult {
